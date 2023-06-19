@@ -4,7 +4,6 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<Nullable>enable</Nullable>
 		<Authors>Vincent Dagpin, Marcelius Dagpin</Authors>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<Copyright>Copyright (c) 2023</Copyright>
 		<Version>1.0.0.1</Version>

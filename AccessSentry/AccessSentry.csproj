@@ -9,8 +9,8 @@
 		<Copyright>Copyright (c) 2023</Copyright>
 		<Version>1.0.0.1</Version>
 		<PackageReleaseNotes></PackageReleaseNotes>
-		<RepositoryUrl>https://github.com/mgdagpin/TasqR</RepositoryUrl>
-		<PackageProjectUrl>https://github.com/mgdagpin/TasqR</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/vgdagpin/AccessSentry</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/vgdagpin/AccessSentry</PackageProjectUrl>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -30,9 +30,9 @@ namespace AccessSentry.PermissionProviders.Casbin
         public class CasbinFuncPermissionAuthorizationContext : IAuthorizationContext
         {
             public virtual Func<string, bool> Expression { get; set; }
-            public IPrincipal User { get; }
+            public string User { get; }
 
-            public CasbinFuncPermissionAuthorizationContext(IPrincipal principal, Func<string, bool> permissionExpression)
+            public CasbinFuncPermissionAuthorizationContext(string principal, Func<string, bool> permissionExpression)
             {
                 User = principal;
                 Expression = permissionExpression;

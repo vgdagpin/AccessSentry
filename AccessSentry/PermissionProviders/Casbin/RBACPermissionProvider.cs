@@ -1,18 +1,7 @@
 ﻿using AccessSentry.Interfaces;
 
 using Casbin;
-using Casbin.Adapter.File;
-using Casbin.Model;
-using Casbin.Persist;
 
-using Microsoft.Extensions.Caching.Memory;
-
-using System;
-using System.IO;
-using System.Linq;
-using System.Security.Claims;
-using System.Security.Principal;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,13 +11,16 @@ namespace AccessSentry.PermissionProviders.Casbin
     {
         private readonly IPolicyProvider policyProvider;
 
+        protected virtual string SuperAdminRole => "SuperAdmin";
+
         #region Properties
         public override CasbinModel Model => new CasbinModel
         {
-            RequestDefinition = "r = role, resource, action",
-            PolicyDefinition = "p = role, resource, action",
-            PolicyEffect = "e = some(where (p.eft == allow))",
-            Matchers = "m = r.role == p.role && r.resource == p.resource && r.action == p.action"
+            RequestDefinition = "r = sub, obj, act",
+            PolicyDefinition = "p = sub, obj, act, eft",
+            RoleDefinition = new[] { "g = _, _" },
+            PolicyEffect = "e = some(where (p.eft == allow)) && !some(where (p.eft == deny))",
+            Matchers = $"m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act || p.sub == {SuperAdminRole}"
         };
 
         public override string Policy => policyProvider.GetPolicy(); 
@@ -43,15 +35,25 @@ namespace AccessSentry.PermissionProviders.Casbin
         public override bool CanUseProvider(IAuthorizationContext authorizationContext)
             => authorizationContext is RBACAuthorizationContext;
 
-        protected string[] GetRoles()
-        {
-            if (AuthorizationContext.User != null && AuthorizationContext.User is ClaimsPrincipal claimsPrincipal)
-            {
-                return claimsPrincipal.FindAll(ClaimTypes.Role).Select(a => a.Value).ToArray();
-            }
+        //protected string[] GetRoles()
+        //{
+        //    if (AuthorizationContext.User != null && AuthorizationContext.User is ClaimsPrincipal claimsPrincipal)
+        //    {
+        //        return claimsPrincipal.FindAll(ClaimTypes.Role).Select(a => a.Value).ToArray();
+        //    }
 
-            return Array.Empty<string>();
-        }
+        //    return Array.Empty<string>();
+        //}
+
+        //protected string? GetName()
+        //{
+        //    if (AuthorizationContext.User != null && AuthorizationContext.User is ClaimsPrincipal claimsPrincipal)
+        //    {
+        //        return claimsPrincipal.FindFirst(ClaimTypes.Name)?.Value;
+        //    }
+
+        //    return null;
+        //}
 
         public override bool EvaluateContext()
         {
@@ -65,25 +67,37 @@ namespace AccessSentry.PermissionProviders.Casbin
             var hasAny = false;
 
             var enforcer = GetEnforcer();
-            var roles = GetRoles();
+            //var roles = GetRoles();
 
             foreach (var permission in authContext.Permissions)
             {
-                foreach (var role in roles)
-                {
-                    var result = enforcer.Enforce(role, permission.Resource, permission.Action);
+                //var user = GetName();
 
-                    if (result)
-                    {
-                        hasAny = true;
-                        break;
-                    }
-                }
-
-                if (hasAny)
+                // check for user first, then roles
+                if (!string.IsNullOrWhiteSpace(authContext.User)
+                    && enforcer.Enforce(authContext.User, permission.Resource, permission.Action))
                 {
+                    hasAny = true;
                     break;
                 }
+                //else
+                //{
+                //    foreach (var role in roles)
+                //    {
+                //        var result = enforcer.Enforce(role, permission.Resource, permission.Action);
+
+                //        if (result)
+                //        {
+                //            hasAny = true;
+                //            break;
+                //        }
+                //    }
+                //}
+
+                //if (hasAny)
+                //{
+                //    break;
+                //}
             }
 
             return hasAny;
@@ -101,25 +115,32 @@ namespace AccessSentry.PermissionProviders.Casbin
             var hasAny = false;
 
             var enforcer = GetEnforcer();
-            var roles = GetRoles();
+            //var roles = GetRoles();
 
             foreach (var permission in authContext.Permissions)
             {
-                foreach (var role in roles)
+                if (!string.IsNullOrWhiteSpace(authContext.User)
+                   && enforcer.Enforce(authContext.User, permission.Resource, permission.Action))
                 {
-                    var result = await enforcer.EnforceAsync(role, permission.Resource, permission.Action);
-
-                    if (result)
-                    {
-                        hasAny = true;
-                        break;
-                    }
-                }
-
-                if (hasAny)
-                {
+                    hasAny = true;
                     break;
                 }
+
+                //foreach (var role in roles)
+                //{
+                //    var result = await enforcer.EnforceAsync(role, permission.Resource, permission.Action);
+
+                //    if (result)
+                //    {
+                //        hasAny = true;
+                //        break;
+                //    }
+                //}
+
+                //if (hasAny)
+                //{
+                //    break;
+                //}
             }
 
             return hasAny;
@@ -127,12 +148,12 @@ namespace AccessSentry.PermissionProviders.Casbin
 
         public class RBACAuthorizationContext : IAuthorizationContext
         {
-            public IPrincipal User { get; }
+            public string User { get; }
             public Permission[] Permissions { get; }
 
-            public RBACAuthorizationContext(IPrincipal principal, params Permission[] permissions)
+            public RBACAuthorizationContext(string subject, params Permission[] permissions)
             {
-                User = principal;
+                User = subject;
                 Permissions = permissions;
             }
         }

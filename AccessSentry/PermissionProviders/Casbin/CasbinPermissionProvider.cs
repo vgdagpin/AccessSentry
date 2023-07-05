@@ -38,15 +38,15 @@ p, Admin, Organization:CanCreate
         public override bool CanUseProvider(IAuthorizationContext authorizationContext) 
             => authorizationContext is CasbinPermissionAuthorizationContext;
 
-        protected string[] GetRoles()
-        {
-            if (AuthorizationContext.User != null && AuthorizationContext.User is ClaimsPrincipal claimsPrincipal)
-            {
-                return claimsPrincipal.FindAll(ClaimTypes.Role).Select(a => a.Value).ToArray();
-            }
+        //protected string[] GetRoles()
+        //{
+        //    if (AuthorizationContext.User != null && AuthorizationContext.User is ClaimsPrincipal claimsPrincipal)
+        //    {
+        //        return claimsPrincipal.FindAll(ClaimTypes.Role).Select(a => a.Value).ToArray();
+        //    }
 
-            return Array.Empty<string>();
-        }
+        //    return Array.Empty<string>();
+        //}
 
         public override bool EvaluateContext()
         {
@@ -60,25 +60,32 @@ p, Admin, Organization:CanCreate
             var hasAny = false;
 
             var enforcer = GetEnforcer();
-            var roles = GetRoles();
+            //var roles = GetRoles();
 
             foreach (var permission in authContext.Permissions)
             {
-                foreach (var role in roles)
+                if (!string.IsNullOrWhiteSpace(authContext.User)
+                    && enforcer.Enforce(authContext.User, permission))
                 {
-                    var result = enforcer.Enforce(role, permission);
-
-                    if (result)
-                    {
-                        hasAny = true;
-                        break;
-                    }
-                }
-
-                if (hasAny)
-                {
+                    hasAny = true;
                     break;
                 }
+
+                //foreach (var role in roles)
+                //{
+                //    var result = enforcer.Enforce(role, permission);
+
+                //    if (result)
+                //    {
+                //        hasAny = true;
+                //        break;
+                //    }
+                //}
+
+                //if (hasAny)
+                //{
+                //    break;
+                //}
             }
 
             return hasAny;
@@ -96,25 +103,31 @@ p, Admin, Organization:CanCreate
             var hasAny = false;
 
             var enforcer = GetEnforcer();
-            var roles = GetRoles();
+            //var roles = GetRoles();
 
             foreach (var permission in authContext.Permissions)
             {
-                foreach (var role in roles)
+                if (!string.IsNullOrWhiteSpace(authContext.User)
+                    && enforcer.Enforce(authContext.User, permission))
                 {
-                    var result = await enforcer.EnforceAsync(role, permission);
-
-                    if (result)
-                    {
-                        hasAny = true;
-                        break;
-                    }
-                }
-
-                if (hasAny)
-                {
+                    hasAny = true;
                     break;
                 }
+                //foreach (var role in roles)
+                //{
+                //    var result = await enforcer.EnforceAsync(role, permission);
+
+                //    if (result)
+                //    {
+                //        hasAny = true;
+                //        break;
+                //    }
+                //}
+
+                //if (hasAny)
+                //{
+                //    break;
+                //}
             }
 
             return hasAny;
@@ -124,9 +137,9 @@ p, Admin, Organization:CanCreate
         public class CasbinPermissionAuthorizationContext : IAuthorizationContext
         {
             public virtual string[] Permissions { get; set; } = null!;
-            public IPrincipal User { get; }
+            public string User { get; }
 
-            public CasbinPermissionAuthorizationContext(IPrincipal principal, params string[] permissions)
+            public CasbinPermissionAuthorizationContext(string principal, params string[] permissions)
             {
                 User = principal;
                 Permissions = permissions;

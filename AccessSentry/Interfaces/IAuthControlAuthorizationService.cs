@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,22 +11,22 @@ namespace AccessSentry.Interfaces
         public IPermissionProviderFactory PermissionProviderFactory { get; }
 
 
-        bool HasAnyPermission(params string[] permissions);
-        Task<bool> HasAnyPermissionAsync(params string[] permissions);
+        bool HasAnyPermission(IPrincipal principal, params string[] permissions);
+        Task<bool> HasAnyPermissionAsync(IPrincipal principal, params string[] permissions);
 
-        bool HasAnyPermission(params Permission[] permissions);
-        Task<bool> HasAnyPermissionAsync(params Permission[] permissions);
+        bool HasAnyPermission(IPrincipal principal, params Permission[] permissions);
+        Task<bool> HasAnyPermissionAsync(IPrincipal principal, params Permission[] permissions);
 
-        bool HasAllPermission(params string[] permissions);
-        Task<bool> HasAllPermissionAsync(params string[] permissions);
+        bool HasAllPermission(IPrincipal principal, params string[] permissions);
+        Task<bool> HasAllPermissionAsync(IPrincipal principal, params string[] permissions);
 
-        bool HasAllPermission(params Permission[] permissions);
-        Task<bool> HasAllPermissionAsync(params Permission[] permissions);
+        bool HasAllPermission(IPrincipal principal, params Permission[] permissions);
+        Task<bool> HasAllPermissionAsync(IPrincipal principal, params Permission[] permissions);
 
-        bool EvaluatePermission(Func<string, bool> permissionExpression);
-        Task<bool> EvaluatePermissionAsync(Func<string, bool> permissionExpression);
+        bool EvaluatePermission(IPrincipal principal, Func<string, bool> permissionExpression);
+        Task<bool> EvaluatePermissionAsync(IPrincipal principal, Func<string, bool> permissionExpression);
 
-        bool EvaluatePermission(Func<Permission, bool> permissionExpression);
-        Task<bool> EvaluatePermissionAsync(Func<Permission, bool> permissionExpression);
+        bool EvaluatePermission(IPrincipal principal, Func<Permission, bool> permissionExpression);
+        Task<bool> EvaluatePermissionAsync(IPrincipal principal, Func<Permission, bool> permissionExpression);
     }
 }

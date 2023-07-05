@@ -5,10 +5,6 @@ VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AccessSentry", "AccessSentry\AccessSentry.csproj", "{D56B23DD-FB06-4C33-B811-14352127F20A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PolicyProviders", "PolicyProviders", "{369B7851-A39B-4B16-B149-B75DDF1D486F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AccessSentry.EFCorePolicyProvider", "PolicyProviders\AccessSentry.EFCorePolicyProvider\AccessSentry.EFCorePolicyProvider.csproj", "{8F53DDFA-A365-48E2-9078-40E8C52C25EC}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AccessSentry.UnitTests", "AccessSentry.UnitTests\AccessSentry.UnitTests.csproj", "{0A3EADAB-6D09-4299-8169-47F1E4A1DAD3}"
 EndProject
 Global
@@ -21,10 +17,6 @@ Global
 		{D56B23DD-FB06-4C33-B811-14352127F20A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D56B23DD-FB06-4C33-B811-14352127F20A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D56B23DD-FB06-4C33-B811-14352127F20A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8F53DDFA-A365-48E2-9078-40E8C52C25EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8F53DDFA-A365-48E2-9078-40E8C52C25EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8F53DDFA-A365-48E2-9078-40E8C52C25EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8F53DDFA-A365-48E2-9078-40E8C52C25EC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0A3EADAB-6D09-4299-8169-47F1E4A1DAD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0A3EADAB-6D09-4299-8169-47F1E4A1DAD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A3EADAB-6D09-4299-8169-47F1E4A1DAD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -32,9 +24,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{8F53DDFA-A365-48E2-9078-40E8C52C25EC} = {369B7851-A39B-4B16-B149-B75DDF1D486F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1AD04C14-AA80-4FC8-BB67-E3C9CB48C71F}

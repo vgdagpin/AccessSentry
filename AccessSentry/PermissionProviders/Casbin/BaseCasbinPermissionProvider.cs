@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using Casbin.Adapter.File;
 using Casbin.Persist;
 using System.IO;
+using System.Security.Claims;
+using System.Security.Principal;
 
 namespace AccessSentry.PermissionProviders.Casbin
 {
@@ -35,6 +37,30 @@ namespace AccessSentry.PermissionProviders.Casbin
 
         public abstract Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default);
 
+        protected virtual string GetSubject(IPrincipal principal)
+        {
+            if (principal == null)
+            {
+                throw new ArgumentNullException(nameof(principal));
+            }
+
+            if (principal is ClaimsPrincipal claimsPrincipal)
+            {
+                var nameClaim = claimsPrincipal.FindFirst(ClaimTypes.Name);
+
+                if (nameClaim == null)
+                {
+                    nameClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
+                }
+
+                if (nameClaim != null)
+                {
+                    return nameClaim.Value;
+                }
+            }
+
+            throw new ArgumentNullException("No name found from principal");
+        }
 
         protected virtual IModel GetModel()
         {

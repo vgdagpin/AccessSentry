@@ -4,6 +4,6 @@ namespace AccessSentry.Interfaces
 {
     public interface IAuthorizationContext
     {
-        string User { get; }
+        IPrincipal User { get; }
     }
 }

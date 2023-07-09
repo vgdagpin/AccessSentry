@@ -2,6 +2,7 @@
 
 using Casbin;
 
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,16 +23,6 @@ namespace AccessSentry.PermissionProviders.Casbin
         public override bool CanUseProvider(IAuthorizationContext authorizationContext) 
             => authorizationContext is CasbinPermissionAuthorizationContext;
 
-        //protected string[] GetRoles()
-        //{
-        //    if (AuthorizationContext.User != null && AuthorizationContext.User is ClaimsPrincipal claimsPrincipal)
-        //    {
-        //        return claimsPrincipal.FindAll(ClaimTypes.Role).Select(a => a.Value).ToArray();
-        //    }
-
-        //    return Array.Empty<string>();
-        //}
-
         public override bool EvaluateContext()
         {
             var authContext = AuthorizationContext as CasbinPermissionAuthorizationContext;
@@ -43,33 +34,17 @@ namespace AccessSentry.PermissionProviders.Casbin
 
             var hasAny = false;
 
-            var enforcer = GetEnforcer(authContext.User);
-            //var roles = GetRoles();
+            var subject = GetSubject(authContext.User);
+            var enforcer = GetEnforcer(subject);
 
             foreach (var permission in authContext.Permissions)
             {
-                if (!string.IsNullOrWhiteSpace(authContext.User)
-                    && enforcer.Enforce(authContext.User, permission))
+                if (!string.IsNullOrWhiteSpace(subject)
+                    && enforcer.Enforce(subject, permission))
                 {
                     hasAny = true;
                     break;
                 }
-
-                //foreach (var role in roles)
-                //{
-                //    var result = enforcer.Enforce(role, permission);
-
-                //    if (result)
-                //    {
-                //        hasAny = true;
-                //        break;
-                //    }
-                //}
-
-                //if (hasAny)
-                //{
-                //    break;
-                //}
             }
 
             return hasAny;
@@ -86,31 +61,16 @@ namespace AccessSentry.PermissionProviders.Casbin
 
             var hasAny = false;
 
-            var enforcer = GetEnforcer(authContext.User);
+            var subject = GetSubject(authContext.User);
+            var enforcer = GetEnforcer(subject);
 
             foreach (var permission in authContext.Permissions)
             {
-                if (!string.IsNullOrWhiteSpace(authContext.User)
-                    && enforcer.Enforce(authContext.User, permission))
+                if (!string.IsNullOrWhiteSpace(subject) && await enforcer.EnforceAsync(subject, permission))
                 {
                     hasAny = true;
                     break;
                 }
-                //foreach (var role in roles)
-                //{
-                //    var result = await enforcer.EnforceAsync(role, permission);
-
-                //    if (result)
-                //    {
-                //        hasAny = true;
-                //        break;
-                //    }
-                //}
-
-                //if (hasAny)
-                //{
-                //    break;
-                //}
             }
 
             return hasAny;
@@ -128,9 +88,9 @@ p, Admin, Organization:CanCreate
         public class CasbinPermissionAuthorizationContext : IAuthorizationContext
         {
             public virtual string[] Permissions { get; set; } = null!;
-            public string User { get; }
+            public IPrincipal User { get; }
 
-            public CasbinPermissionAuthorizationContext(string principal, params string[] permissions)
+            public CasbinPermissionAuthorizationContext(IPrincipal principal, params string[] permissions)
             {
                 User = principal;
                 Permissions = permissions;

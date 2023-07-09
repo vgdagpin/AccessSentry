@@ -6,6 +6,7 @@ using Casbin.Model;
 using Moq;
 using Moq.Protected;
 
+using System.Security.Claims;
 using System.Text;
 
 using static AccessSentry.PermissionProviders.Casbin.RBACPermissionProvider;
@@ -59,7 +60,9 @@ public class RBACPermissionProviderTests
 
         var permissionProvider = mockPermissionProvider.Object;
 
-        permissionProvider.AuthorizationContext = new RBACAuthorizationContext(sub, Permission.Other(obj, act));
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, sub) }));
+
+        permissionProvider.AuthorizationContext = new RBACAuthorizationContext(principal, Permission.Other(obj, act));
 
         var result = permissionProvider.EvaluateContext();
 

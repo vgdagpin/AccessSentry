@@ -21,31 +21,6 @@ namespace AccessSentry
             PermissionProviderFactory = permissionProviderFactory;
         }
 
-        protected virtual string GetName(IPrincipal principal)
-        {
-            if (principal == null)
-            {
-                throw new ArgumentNullException(nameof(principal));
-            }
-
-            if (principal is ClaimsPrincipal claimsPrincipal)
-            {
-                var nameClaim = claimsPrincipal.FindFirst(ClaimTypes.Name);
-
-                if (nameClaim == null)
-                {
-                    nameClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
-                }
-
-                if (nameClaim != null)
-                {
-                    return nameClaim.Value;
-                }
-            }
-
-            throw new ArgumentNullException("No name found from principal");
-        }
-
         protected virtual Permission[] GetPermissions(params string[] permissions)
         {
             if (permissions == null || permissions.Length == 0)
@@ -76,7 +51,7 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            var authContext = new RBACAuthorizationContext(GetName(principal), GetPermissions(permissions));
+            var authContext = new RBACAuthorizationContext(principal, GetPermissions(permissions));
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {
@@ -99,7 +74,7 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            var authContext = new RBACAuthorizationContext(GetName(principal), GetPermissions(permissions));
+            var authContext = new RBACAuthorizationContext(principal, GetPermissions(permissions));
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {
@@ -122,7 +97,7 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            var authContext = new RBACAuthorizationContext(GetName(principal), permissions);
+            var authContext = new RBACAuthorizationContext(principal, permissions);
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {
@@ -145,7 +120,7 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            var authContext = new RBACAuthorizationContext(GetName(principal), permissions);
+            var authContext = new RBACAuthorizationContext(principal, permissions);
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {
@@ -164,7 +139,6 @@ namespace AccessSentry
         public bool HasAnyPermission(IPrincipal principal, params string[] permissions)
         {
             var perms = GetPermissions(permissions);
-            var name = GetName(principal);
 
             if (perms.Length == 0)
             {
@@ -173,7 +147,7 @@ namespace AccessSentry
 
             var hasAny = false;
 
-            var authContext = new RBACAuthorizationContext(name, perms);
+            var authContext = new RBACAuthorizationContext(principal, perms);
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {
@@ -196,7 +170,7 @@ namespace AccessSentry
 
             var hasAny = false;
 
-            var authContext = new RBACAuthorizationContext(GetName(principal), GetPermissions(permissions));
+            var authContext = new RBACAuthorizationContext(principal, GetPermissions(permissions));
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {
@@ -219,7 +193,7 @@ namespace AccessSentry
 
             var hasAny = false;
 
-            var authContext = new RBACAuthorizationContext(GetName(principal), permissions);
+            var authContext = new RBACAuthorizationContext(principal, permissions);
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {
@@ -242,7 +216,7 @@ namespace AccessSentry
 
             var hasAny = false;
 
-            var authContext = new RBACAuthorizationContext(GetName(principal), permissions);
+            var authContext = new RBACAuthorizationContext(principal, permissions);
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {
@@ -267,7 +241,7 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            var authContext = new CasbinFuncPermissionAuthorizationContext(GetName(principal), permissionExpression);
+            var authContext = new CasbinFuncPermissionAuthorizationContext(principal, permissionExpression);
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {
@@ -290,7 +264,7 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            var authContext = new CasbinFuncPermissionAuthorizationContext(GetName(principal), permissionExpression);
+            var authContext = new CasbinFuncPermissionAuthorizationContext(principal, permissionExpression);
 
             foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
             {

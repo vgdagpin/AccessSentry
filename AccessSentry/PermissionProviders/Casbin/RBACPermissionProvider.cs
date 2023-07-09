@@ -2,6 +2,7 @@
 
 using Casbin;
 
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,7 +32,9 @@ namespace AccessSentry.PermissionProviders.Casbin
 
         protected virtual bool IsSuperAdmin(IAuthorizationContext authorizationContext)
         {
-            if (!string.IsNullOrWhiteSpace(SuperAdminRole) && authorizationContext.User == SuperAdminRole)
+            var subject = GetSubject(authorizationContext.User);
+
+            if (!string.IsNullOrWhiteSpace(SuperAdminRole) && subject == SuperAdminRole)
             {
                 return true;
             }
@@ -57,13 +60,15 @@ namespace AccessSentry.PermissionProviders.Casbin
                 return true;
             }
 
-            var enforcer = GetEnforcer(authContext.User);
+            var subject = GetSubject(authContext.User);
+
+            var enforcer = GetEnforcer(subject);
 
             foreach (var permission in authContext.Permissions)
             {
                 // check for user first, then roles
-                if (!string.IsNullOrWhiteSpace(authContext.User)
-                    && enforcer.Enforce(authContext.User, permission.Resource, permission.Action))
+                if (!string.IsNullOrWhiteSpace(subject)
+                    && enforcer.Enforce(subject, permission.Resource, permission.Action))
                 {
                     hasAny = true;
                     break;
@@ -89,12 +94,13 @@ namespace AccessSentry.PermissionProviders.Casbin
                 return true;
             }
 
-            var enforcer = GetEnforcer(authContext.User);
+            var subject = GetSubject(authContext.User);
+            var enforcer = GetEnforcer(subject);
 
             foreach (var permission in authContext.Permissions)
             {
-                if (!string.IsNullOrWhiteSpace(authContext.User)
-                   && await enforcer.EnforceAsync(authContext.User, permission.Resource, permission.Action))
+                if (!string.IsNullOrWhiteSpace(subject)
+                   && await enforcer.EnforceAsync(subject, permission.Resource, permission.Action))
                 {
                     hasAny = true;
                     break;
@@ -108,10 +114,10 @@ namespace AccessSentry.PermissionProviders.Casbin
 
         public class RBACAuthorizationContext : IAuthorizationContext
         {
-            public string User { get; }
+            public IPrincipal User { get; }
             public Permission[] Permissions { get; }
 
-            public RBACAuthorizationContext(string subject, params Permission[] permissions)
+            public RBACAuthorizationContext(IPrincipal subject, params Permission[] permissions)
             {
                 User = subject;
                 Permissions = permissions;

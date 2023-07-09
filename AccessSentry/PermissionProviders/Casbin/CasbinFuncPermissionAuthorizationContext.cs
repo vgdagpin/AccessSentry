@@ -1,6 +1,7 @@
 ﻿using AccessSentry.Interfaces;
 
 using System;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,9 +34,9 @@ namespace AccessSentry.PermissionProviders.Casbin
         public class CasbinFuncPermissionAuthorizationContext : IAuthorizationContext
         {
             public virtual Func<string, bool> Expression { get; set; }
-            public string User { get; }
+            public IPrincipal User { get; }
 
-            public CasbinFuncPermissionAuthorizationContext(string principal, Func<string, bool> permissionExpression)
+            public CasbinFuncPermissionAuthorizationContext(IPrincipal principal, Func<string, bool> permissionExpression)
             {
                 User = principal;
                 Expression = permissionExpression;

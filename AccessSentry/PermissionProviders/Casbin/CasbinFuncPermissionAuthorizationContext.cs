@@ -5,16 +5,15 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
+using static AccessSentry.PermissionProviders.Casbin.CasbinFuncPermissionProvider;
+
 namespace AccessSentry.PermissionProviders.Casbin
 {
-    public class CasbinFuncPermissionProvider : BaseCasbinPermissionProvider
+    public class CasbinFuncPermissionProvider : BaseCasbinPermissionProvider<CasbinFuncPermissionAuthorizationContext>
     {
         #region Properties
         public override CasbinModel Model { get; }
         #endregion
-
-        public override bool CanUseProvider(IAuthorizationContext authorizationContext) 
-            => authorizationContext is CasbinFuncPermissionAuthorizationContext;
 
         public override bool EvaluateContext()
         {

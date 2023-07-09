@@ -1,26 +1,25 @@
 ﻿using AccessSentry.Interfaces;
 
-using Casbin.Model;
 using Casbin;
+using Casbin.Adapter.File;
+using Casbin.Model;
+using Casbin.Persist;
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Casbin.Adapter.File;
-using Casbin.Persist;
 using System.IO;
 using System.Security.Claims;
 using System.Security.Principal;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AccessSentry.PermissionProviders.Casbin
 {
-    public abstract class BaseCasbinPermissionProvider : IPermissionProvider
+    public abstract class BaseCasbinPermissionProvider<T> : IPermissionProvider where T : IAuthorizationContext
     {
         private IModel? model;
 
-        public virtual IAuthorizationContext AuthorizationContext { get; set; }
+        public virtual IAuthorizationContext AuthorizationContext { get; set; } = null!;
 
         /// <summary>
         /// Get the model to use for casbin (eg. RBAC,ABAC, etc..)
@@ -29,7 +28,7 @@ namespace AccessSentry.PermissionProviders.Casbin
         /// </summary>
         public abstract CasbinModel Model { get; }
 
-        public abstract bool CanUseProvider(IAuthorizationContext authorizationContext);
+        public virtual bool CanUseProvider(IAuthorizationContext authorizationContext) => authorizationContext is T;
 
         public abstract bool EvaluateContext();
 

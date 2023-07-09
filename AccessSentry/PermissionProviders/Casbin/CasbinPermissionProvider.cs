@@ -6,11 +6,19 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
+using static AccessSentry.PermissionProviders.Casbin.CasbinPermissionProvider;
+
 namespace AccessSentry.PermissionProviders.Casbin
 {
-    public class CasbinPermissionProvider : BaseCasbinPermissionProvider
+    public class CasbinPermissionProvider : BaseCasbinPermissionProvider<CasbinPermissionAuthorizationContext>
     {
         #region Properties
+        public new CasbinPermissionAuthorizationContext AuthorizationContext
+        {
+            get => (CasbinPermissionAuthorizationContext)base.AuthorizationContext;
+            set => base.AuthorizationContext = value;
+        }
+
         public override CasbinModel Model => new CasbinModel
         {
             RequestDefinition = "r = role, perm",
@@ -20,24 +28,19 @@ namespace AccessSentry.PermissionProviders.Casbin
         };
         #endregion
 
-        public override bool CanUseProvider(IAuthorizationContext authorizationContext) 
-            => authorizationContext is CasbinPermissionAuthorizationContext;
-
         public override bool EvaluateContext()
         {
-            var authContext = AuthorizationContext as CasbinPermissionAuthorizationContext;
-
-            if (authContext == null || authContext.Permissions == null || authContext.Permissions.Length == 0)
+            if (AuthorizationContext.Permissions == null || AuthorizationContext.Permissions.Length == 0)
             {
                 return false;
             }
 
             var hasAny = false;
 
-            var subject = GetSubject(authContext.User);
+            var subject = GetSubject(AuthorizationContext.User);
             var enforcer = GetEnforcer(subject);
 
-            foreach (var permission in authContext.Permissions)
+            foreach (var permission in AuthorizationContext.Permissions)
             {
                 if (!string.IsNullOrWhiteSpace(subject)
                     && enforcer.Enforce(subject, permission))
@@ -52,19 +55,17 @@ namespace AccessSentry.PermissionProviders.Casbin
 
         public override async Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default)
         {
-            var authContext = AuthorizationContext as CasbinPermissionAuthorizationContext;
-
-            if (authContext == null || authContext.Permissions == null || authContext.Permissions.Length == 0)
+            if (AuthorizationContext.Permissions == null || AuthorizationContext.Permissions.Length == 0)
             {
                 return false;
             }
 
             var hasAny = false;
 
-            var subject = GetSubject(authContext.User);
+            var subject = GetSubject(AuthorizationContext.User);
             var enforcer = GetEnforcer(subject);
 
-            foreach (var permission in authContext.Permissions)
+            foreach (var permission in AuthorizationContext.Permissions)
             {
                 if (!string.IsNullOrWhiteSpace(subject) && await enforcer.EnforceAsync(subject, permission))
                 {
@@ -76,14 +77,12 @@ namespace AccessSentry.PermissionProviders.Casbin
             return hasAny;
         }
 
-        public override string GetPolicy(string? subject = null)
-        {
-            return @"
+        public override string GetPolicy(string? subject = null) =>
+@"
 p, Admin, Booking:CanRead  
 p, Admin, Booking:CanWrite
 p, Admin, Organization:CanCreate
 ";
-        }
 
         public class CasbinPermissionAuthorizationContext : IAuthorizationContext
         {

@@ -16,6 +16,8 @@ namespace AccessSentry.PermissionProviders.Casbin
 {
     public abstract class BaseCasbinPermissionProvider : IPermissionProvider
     {
+        private IModel? model;
+
         public virtual IAuthorizationContext AuthorizationContext { get; set; }
 
         /// <summary>
@@ -24,23 +26,29 @@ namespace AccessSentry.PermissionProviders.Casbin
         /// See https://casbin.org/docs/supported-models for more supported models
         /// </summary>
         public abstract CasbinModel Model { get; }
-        public abstract string Policy { get; }
 
         public abstract bool CanUseProvider(IAuthorizationContext authorizationContext);
 
         public abstract bool EvaluateContext();
+
+        public abstract string GetPolicy(string? subject = null);
 
         public abstract Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default);
 
 
         protected virtual IModel GetModel()
         {
-            if (Model == null)
+            if (model == null)
             {
-                throw new ArgumentNullException(nameof(Model));
+                if (Model == null)
+                {
+                    throw new ArgumentNullException(nameof(Model));
+                }
+
+                model = DefaultModel.CreateFromText(Model.ToString().Trim());
             }
 
-            return DefaultModel.CreateFromText(Model.ToString().Trim());
+            return model;
         }
 
         /// <summary>
@@ -48,20 +56,22 @@ namespace AccessSentry.PermissionProviders.Casbin
         /// <br /><br />
         /// See https://casbin.org/docs/adapters for more adapter types
         /// </summary>
-        protected virtual IReadOnlyAdapter GetFileAdapter()
+        protected virtual IReadOnlyAdapter GetFileAdapter(string subject)
         {
-            if (string.IsNullOrWhiteSpace(Policy))
+            var policy = GetPolicy(subject);
+
+            if (string.IsNullOrWhiteSpace(policy))
             {
-                throw new ArgumentNullException(nameof(Policy));
+                throw new ArgumentNullException(nameof(policy));
             }
 
-            return new FileAdapter(new MemoryStream(Encoding.UTF8.GetBytes(Policy.Trim())));
+            return new FileAdapter(new MemoryStream(Encoding.UTF8.GetBytes(policy)));
         }
 
-        protected virtual IEnforcer GetEnforcer()
+        protected virtual IEnforcer GetEnforcer(string subject)
         {
             var model = GetModel();
-            var adapter = GetFileAdapter();
+            var adapter = GetFileAdapter(subject);
 
             return new Enforcer(model, adapter);
         }
@@ -70,10 +80,10 @@ namespace AccessSentry.PermissionProviders.Casbin
     public class CasbinModel
     {
         public string RequestDefinition { get; set; } = null!;
-        public string PolicyDefinition { get; set; } = null!;
+        public string[] PolicyDefinition { get; set; } = null!;
         public string[]? RoleDefinition { get; set; }
         public string PolicyEffect { get; set; } = null!;
-        public string Matchers { get; set; } = null!;
+        public string[] Matchers { get; set; } = null!;
 
         public override string ToString()
         {
@@ -83,7 +93,10 @@ namespace AccessSentry.PermissionProviders.Casbin
             sb.AppendLine(RequestDefinition);
             sb.AppendLine();
             sb.AppendLine("[policy_definition]");
-            sb.AppendLine(PolicyDefinition);
+            foreach (var policyDef in PolicyDefinition)
+            {
+                sb.AppendLine(policyDef);
+            }
 
             if (RoleDefinition != null && RoleDefinition.Length > 0)
             {
@@ -101,7 +114,10 @@ namespace AccessSentry.PermissionProviders.Casbin
             sb.AppendLine(PolicyEffect);
             sb.AppendLine();
             sb.AppendLine("[matchers]");
-            sb.AppendLine(Matchers);
+            foreach (var matcher in Matchers)
+            {
+                sb.AppendLine(matcher);
+            }
 
             return sb.ToString();
         }

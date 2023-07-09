@@ -1,7 +1,6 @@
 ﻿using AccessSentry.Interfaces;
 
 using System;
-using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +10,6 @@ namespace AccessSentry.PermissionProviders.Casbin
     {
         #region Properties
         public override CasbinModel Model { get; }
-        public override string Policy { get; } 
         #endregion
 
         public override bool CanUseProvider(IAuthorizationContext authorizationContext) 
@@ -23,6 +21,11 @@ namespace AccessSentry.PermissionProviders.Casbin
         }
 
         public override Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetPolicy(string? subject = null)
         {
             throw new NotImplementedException();
         }

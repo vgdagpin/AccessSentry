@@ -2,6 +2,6 @@
 {
     public interface IPolicyProvider
     {
-        string GetPolicy();
+        string GetPolicy(string? subject = null);
     }
 }

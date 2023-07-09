@@ -7,7 +7,7 @@ namespace AccessSentry
 {
     public class DefaultPolicyProvider : IPolicyProvider
     {
-        public virtual string GetPolicy()
+        public virtual string GetPolicy(string? subject = null)
         {
             // https://github.com/casbin/casbin/blob/master/examples/rbac_with_deny_policy.csv
             var sb = new StringBuilder();

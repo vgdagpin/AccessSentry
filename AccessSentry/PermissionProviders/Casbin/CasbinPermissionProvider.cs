@@ -1,16 +1,7 @@
 ﻿using AccessSentry.Interfaces;
 
 using Casbin;
-using Casbin.Adapter.File;
-using Casbin.Model;
-using Casbin.Persist;
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Security.Claims;
-using System.Security.Principal;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,17 +13,10 @@ namespace AccessSentry.PermissionProviders.Casbin
         public override CasbinModel Model => new CasbinModel
         {
             RequestDefinition = "r = role, perm",
-            PolicyDefinition = "p = role, perm",
+            PolicyDefinition = new[] { "p = role, perm" },
             PolicyEffect = "e = some(where (p.eft == allow))",
-            Matchers = "m = r.role == p.role && keyMatch(r.perm, p.perm)"
+            Matchers = new[] { "m = r.role == p.role && keyMatch(r.perm, p.perm)" }
         };
-
-        public override string Policy =>
-    @"
-p, Admin, Booking:CanRead  
-p, Admin, Booking:CanWrite
-p, Admin, Organization:CanCreate
-"; 
         #endregion
 
         public override bool CanUseProvider(IAuthorizationContext authorizationContext) 
@@ -59,7 +43,7 @@ p, Admin, Organization:CanCreate
 
             var hasAny = false;
 
-            var enforcer = GetEnforcer();
+            var enforcer = GetEnforcer(authContext.User);
             //var roles = GetRoles();
 
             foreach (var permission in authContext.Permissions)
@@ -102,8 +86,7 @@ p, Admin, Organization:CanCreate
 
             var hasAny = false;
 
-            var enforcer = GetEnforcer();
-            //var roles = GetRoles();
+            var enforcer = GetEnforcer(authContext.User);
 
             foreach (var permission in authContext.Permissions)
             {
@@ -133,6 +116,14 @@ p, Admin, Organization:CanCreate
             return hasAny;
         }
 
+        public override string GetPolicy(string? subject = null)
+        {
+            return @"
+p, Admin, Booking:CanRead  
+p, Admin, Booking:CanWrite
+p, Admin, Organization:CanCreate
+";
+        }
 
         public class CasbinPermissionAuthorizationContext : IAuthorizationContext
         {

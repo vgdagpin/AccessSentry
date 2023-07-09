@@ -11,19 +11,17 @@ namespace AccessSentry.PermissionProviders.Casbin
     {
         private readonly IPolicyProvider policyProvider;
 
-        protected virtual string SuperAdminRole => "SuperAdmin";
+        public virtual string SuperAdminRole => "r::SuperAdmin";
 
         #region Properties
         public override CasbinModel Model => new CasbinModel
         {
             RequestDefinition = "r = sub, obj, act",
-            PolicyDefinition = "p = sub, obj, act, eft",
+            PolicyDefinition = new[] { "p = sub, obj, act, eft" },
             RoleDefinition = new[] { "g = _, _" },
             PolicyEffect = "e = some(where (p.eft == allow)) && !some(where (p.eft == deny))",
-            Matchers = $"m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act || p.sub == {SuperAdminRole}"
+            Matchers = new[] { $"m = g(p.sub, r.sub) && r.obj == p.obj && r.act == p.act" }
         };
-
-        public override string Policy => policyProvider.GetPolicy(); 
         #endregion
 
         public RBACPermissionProvider(IPolicyProvider policyProvider)
@@ -31,29 +29,17 @@ namespace AccessSentry.PermissionProviders.Casbin
             this.policyProvider = policyProvider;
         }
 
+        protected virtual bool IsSuperAdmin(IAuthorizationContext authorizationContext)
+        {
+            if (!string.IsNullOrWhiteSpace(SuperAdminRole) && authorizationContext.User == SuperAdminRole)
+            {
+                return true;
+            }
 
-        public override bool CanUseProvider(IAuthorizationContext authorizationContext)
-            => authorizationContext is RBACAuthorizationContext;
+            return false;
+        }
 
-        //protected string[] GetRoles()
-        //{
-        //    if (AuthorizationContext.User != null && AuthorizationContext.User is ClaimsPrincipal claimsPrincipal)
-        //    {
-        //        return claimsPrincipal.FindAll(ClaimTypes.Role).Select(a => a.Value).ToArray();
-        //    }
-
-        //    return Array.Empty<string>();
-        //}
-
-        //protected string? GetName()
-        //{
-        //    if (AuthorizationContext.User != null && AuthorizationContext.User is ClaimsPrincipal claimsPrincipal)
-        //    {
-        //        return claimsPrincipal.FindFirst(ClaimTypes.Name)?.Value;
-        //    }
-
-        //    return null;
-        //}
+        public override bool CanUseProvider(IAuthorizationContext authorizationContext) => authorizationContext is RBACAuthorizationContext;
 
         public override bool EvaluateContext()
         {
@@ -66,13 +52,15 @@ namespace AccessSentry.PermissionProviders.Casbin
 
             var hasAny = false;
 
-            var enforcer = GetEnforcer();
-            //var roles = GetRoles();
+            if (IsSuperAdmin(authContext))
+            {
+                return true;
+            }
+
+            var enforcer = GetEnforcer(authContext.User);
 
             foreach (var permission in authContext.Permissions)
             {
-                //var user = GetName();
-
                 // check for user first, then roles
                 if (!string.IsNullOrWhiteSpace(authContext.User)
                     && enforcer.Enforce(authContext.User, permission.Resource, permission.Action))
@@ -80,24 +68,6 @@ namespace AccessSentry.PermissionProviders.Casbin
                     hasAny = true;
                     break;
                 }
-                //else
-                //{
-                //    foreach (var role in roles)
-                //    {
-                //        var result = enforcer.Enforce(role, permission.Resource, permission.Action);
-
-                //        if (result)
-                //        {
-                //            hasAny = true;
-                //            break;
-                //        }
-                //    }
-                //}
-
-                //if (hasAny)
-                //{
-                //    break;
-                //}
             }
 
             return hasAny;
@@ -114,37 +84,27 @@ namespace AccessSentry.PermissionProviders.Casbin
 
             var hasAny = false;
 
-            var enforcer = GetEnforcer();
-            //var roles = GetRoles();
+            if (IsSuperAdmin(authContext))
+            {
+                return true;
+            }
+
+            var enforcer = GetEnforcer(authContext.User);
 
             foreach (var permission in authContext.Permissions)
             {
                 if (!string.IsNullOrWhiteSpace(authContext.User)
-                   && enforcer.Enforce(authContext.User, permission.Resource, permission.Action))
+                   && await enforcer.EnforceAsync(authContext.User, permission.Resource, permission.Action))
                 {
                     hasAny = true;
                     break;
                 }
-
-                //foreach (var role in roles)
-                //{
-                //    var result = await enforcer.EnforceAsync(role, permission.Resource, permission.Action);
-
-                //    if (result)
-                //    {
-                //        hasAny = true;
-                //        break;
-                //    }
-                //}
-
-                //if (hasAny)
-                //{
-                //    break;
-                //}
             }
 
             return hasAny;
         }
+
+        public override string GetPolicy(string? subject = null) => policyProvider.GetPolicy(subject);
 
         public class RBACAuthorizationContext : IAuthorizationContext
         {

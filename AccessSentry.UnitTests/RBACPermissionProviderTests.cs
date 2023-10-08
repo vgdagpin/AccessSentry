@@ -1,10 +1,7 @@
 ﻿using AccessSentry.Interfaces;
 using AccessSentry.PermissionProviders.Casbin;
 
-using Casbin.Model;
-
 using Moq;
-using Moq.Protected;
 
 using System.Security.Claims;
 using System.Text;
@@ -53,6 +50,39 @@ public class RBACPermissionProviderTests
         sb.AppendLine($"p, u::bob, data2, write, allow"); // #5
         sb.AppendLine($"p, u::alice, data2, write, deny"); // #6
        
+
+        mockPolicyProvider.Setup(a => a.GetPolicy(It.IsAny<string>())).Returns(sb.ToString());
+
+        var mockPermissionProvider = new Mock<RBACPermissionProvider>(mockPolicyProvider.Object) { CallBase = true };
+
+        var permissionProvider = mockPermissionProvider.Object;
+
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, sub) }));
+
+        permissionProvider.AuthorizationContext = new RBACAuthorizationContext(principal, Permission.Other(obj, act));
+
+        var result = permissionProvider.EvaluateContext();
+
+        Assert.Equal(hasPermission, result);
+    }
+
+    [Theory]
+    [InlineData("001", "u::vince", "data", "read", true)]
+    [InlineData("002", "u::teng", "data", "read", true)]
+    [InlineData("003", "u::doe", "data", "read", false)]
+    public void TestHierarchyGroupingHandler(string _, string sub, string obj, string act, bool hasPermission)
+    {
+        var mockPolicyProvider = new Mock<IPolicyProvider>();
+
+        var sb = new StringBuilder();
+
+        sb.AppendLine($"g, r::group_4, u::doe");
+        sb.AppendLine($"g, r::group_3, r::group_2"); // group_2 is a member of group_3
+        sb.AppendLine($"g, r::group_3, u::vince");
+        sb.AppendLine($"g, r::group_2, u::teng"); // so teng also has access to group_3 permissions
+
+        sb.AppendLine($"p, r::group_3, data, read, allow");
+
 
         mockPolicyProvider.Setup(a => a.GetPolicy(It.IsAny<string>())).Returns(sb.ToString());
 

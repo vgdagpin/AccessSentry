@@ -2,10 +2,10 @@
 {
     public class Permission
     {
-        public string Action { get; set; }
-        public string Resource { get; set; }
+        public string Action { get; }
+        public string Resource { get; }
 
-        private Permission(string resource, string action) 
+        protected Permission(string resource, string action) 
         {
             Resource = resource;
             Action = action;

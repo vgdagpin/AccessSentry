@@ -1,9 +1,9 @@
 ﻿using AccessSentry.Interfaces;
 
 using Casbin;
-using Casbin.Adapter.File;
 using Casbin.Model;
 using Casbin.Persist;
+using Casbin.Persist.Adapter.File;
 
 using System;
 using System.IO;

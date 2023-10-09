@@ -30,7 +30,7 @@ namespace AccessSentry
                 sb.AppendLine($"g, {groupMembership.GroupName}, {groupMembership.MemberName}");
             }
 
-            return sb.ToString();
+            return sb.ToString().Trim();
         }
 
         protected virtual IEnumerable<RBACPolicy> GetGroupPermissions(string? subject = null)

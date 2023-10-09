@@ -48,6 +48,11 @@ namespace AccessSentry.PermissionProviders.Casbin
             return false;
         }
 
+        protected virtual string TranslateResource(Permission permission)
+        {
+            return permission.Resource;
+        }
+
         public override bool EvaluateContext()
         {
             if (AuthorizationContext.Permissions == null || AuthorizationContext.Permissions.Length == 0)
@@ -63,14 +68,13 @@ namespace AccessSentry.PermissionProviders.Casbin
             }
 
             var subject = GetSubject(AuthorizationContext.User);
-
             var enforcer = GetEnforcer(subject);
 
             foreach (var permission in AuthorizationContext.Permissions)
             {
                 // check for user first, then roles
                 if (!string.IsNullOrWhiteSpace(subject)
-                    && enforcer.Enforce(subject, permission.Resource, permission.Action))
+                    && enforcer.Enforce(subject, TranslateResource(permission), permission.Action))
                 {
                     hasAny = true;
                     break;
@@ -100,7 +104,7 @@ namespace AccessSentry.PermissionProviders.Casbin
             foreach (var permission in AuthorizationContext.Permissions)
             {
                 if (!string.IsNullOrWhiteSpace(subject)
-                   && await enforcer.EnforceAsync(subject, permission.Resource, permission.Action))
+                   && await enforcer.EnforceAsync(subject, TranslateResource(permission), permission.Action))
                 {
                     hasAny = true;
                     break;

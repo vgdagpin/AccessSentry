@@ -7,6 +7,9 @@ namespace AccessSentry
 {
     public class DefaultPolicyProvider : IPolicyProvider
     {
+        public static string FormatGroupSubject(string groupName) => $"g::{groupName.ToUpper()}";
+        public static string FormatUserSubject(string user) => $"u::{user.ToUpper()}";
+
         public virtual string GetPolicy(string? subject = null)
         {
             // https://github.com/casbin/casbin/blob/master/examples/rbac_with_deny_policy.csv
@@ -24,7 +27,7 @@ namespace AccessSentry
 
             foreach (var groupMembership in GetGroupMemberships(subject))
             {
-                sb.AppendLine($"g, {groupMembership.MemberName}, {groupMembership.GroupName}");
+                sb.AppendLine($"g, {groupMembership.GroupName}, {groupMembership.MemberName}");
             }
 
             return sb.ToString();

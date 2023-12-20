@@ -23,7 +23,7 @@ namespace AccessSentry.PermissionProviders.Casbin
             PolicyDefinition = new[] { "p = sub, obj, act, eft" },
             RoleDefinition = new[] { "g = _, _" },
             PolicyEffect = "e = some(where (p.eft == allow)) && !some(where (p.eft == deny))",
-            Matchers = new[] { $"m = g(p.sub, r.sub) && r.obj == p.obj && r.act == p.act" }
+            Matchers = new[] { $"m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act" }
         };
 
         public new RBACAuthorizationContext AuthorizationContext
@@ -72,9 +72,9 @@ namespace AccessSentry.PermissionProviders.Casbin
 
             foreach (var permission in AuthorizationContext.Permissions)
             {
-                // check for user first, then roles
-                if (!string.IsNullOrWhiteSpace(subject)
-                    && enforcer.Enforce(subject, TranslateResource(permission), permission.Action))
+                var resource = TranslateResource(permission);
+
+                if (enforcer.Enforce(subject, resource, permission.Action))
                 {
                     hasAny = true;
                     break;
@@ -103,8 +103,9 @@ namespace AccessSentry.PermissionProviders.Casbin
 
             foreach (var permission in AuthorizationContext.Permissions)
             {
-                if (!string.IsNullOrWhiteSpace(subject)
-                   && await enforcer.EnforceAsync(subject, TranslateResource(permission), permission.Action))
+                var resource = TranslateResource(permission);
+
+                if (await enforcer.EnforceAsync(subject, resource, permission.Action))
                 {
                     hasAny = true;
                     break;

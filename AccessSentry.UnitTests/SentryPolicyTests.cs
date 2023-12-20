@@ -57,7 +57,7 @@ public class SentryPolicyTests
     {
         get
         {
-            return 
+            return
 @"
 [request_definition]
 r = sub, obj, act
@@ -69,7 +69,7 @@ p = sub, obj, act, eft
 g = _, _
 
 [policy_effect]
-e = some(where (p.eft == allow))
+e = some(where (p.eft == allow)) && !some(where (p.eft == deny))
 
 [matchers]
 m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
@@ -103,6 +103,9 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 
         var userRoles = enforcer.GetImplicitRolesForUser(user);
 
+        var r = enforcer.Enforce(user, "data_x", "read");
+
+        Assert.True(r);
         Assert.Equal(expectedRoles, userRoles.ToArray());
     }
 }

@@ -27,7 +27,7 @@ namespace AccessSentry
 
             foreach (var groupMembership in GetGroupMemberships(subject))
             {
-                sb.AppendLine($"g, {groupMembership.GroupName}, {groupMembership.MemberName}");
+                sb.AppendLine($"g, {groupMembership.MemberName}, {groupMembership.GroupName}");
             }
 
             return sb.ToString().Trim();

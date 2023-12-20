@@ -39,7 +39,7 @@ namespace AccessSentry.PolicyEvaluators
             p_PolicyProvider = policyProvider;
         }
 
-        public bool CanUseProvider(IPolicyContext policyContext)
+        public virtual bool CanUseProvider(IPolicyContext policyContext)
         {
             if (policyContext is SentryPolicyAttribute policyCtx)
             {
@@ -51,7 +51,7 @@ namespace AccessSentry.PolicyEvaluators
             return false;
         }
 
-        public bool EvaluateContext()
+        public virtual bool EvaluateContext()
         {
             if (PolicyContext == null
                 || PolicyContext.User == null
@@ -62,11 +62,12 @@ namespace AccessSentry.PolicyEvaluators
 
             var subject = GetSubject(PolicyContext.User);
             var enforcer = GetEnforcer(subject);
+            var userRoles = enforcer.GetImplicitRolesForUser(subject);
 
-            return enforcer.GetImplicitRolesForUser(subject).Contains(PolicyContext.Policy);
+            return userRoles.Contains(PolicyContext.Policy);
         }
 
-        public Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default)
+        public virtual Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default)
         {
             if (PolicyContext == null
                 || PolicyContext.User == null
@@ -77,8 +78,9 @@ namespace AccessSentry.PolicyEvaluators
 
             var subject = GetSubject(PolicyContext.User);
             var enforcer = GetEnforcer(subject);
+            var userRoles = enforcer.GetImplicitRolesForUser(subject);
 
-            return Task.FromResult(enforcer.GetImplicitRolesForUser(subject).Contains(PolicyContext.Policy));
+            return Task.FromResult(userRoles.Contains(PolicyContext.Policy));
         }
 
         protected virtual string GetSubject(IPrincipal principal)
@@ -124,7 +126,7 @@ namespace AccessSentry.PolicyEvaluators
             return model;
         }
 
-        public string GetPolicy(string? subject = null)
+        public virtual string GetPolicy(string? subject = null)
         {
             return p_PolicyProvider.GetPolicy(subject);
         }

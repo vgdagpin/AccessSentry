@@ -6,7 +6,7 @@ using Moq;
 using System.Security.Claims;
 using System.Text;
 
-using static AccessSentry.PermissionProviders.Casbin.RBACPermissionProvider;
+using static AccessSentry.PermissionProviders.Casbin.RBACPermissionEvaluatorProvider;
 
 namespace AccessSentry.UnitTests;
 
@@ -53,7 +53,7 @@ public class RBACPermissionProviderTests
 
         mockPolicyProvider.Setup(a => a.GetPolicy(It.IsAny<string>())).Returns(sb.ToString());
 
-        var mockPermissionProvider = new Mock<RBACPermissionProvider>(mockPolicyProvider.Object) { CallBase = true };
+        var mockPermissionProvider = new Mock<RBACPermissionEvaluatorProvider>(mockPolicyProvider.Object) { CallBase = true };
 
         var permissionProvider = mockPermissionProvider.Object;
 
@@ -86,7 +86,7 @@ public class RBACPermissionProviderTests
 
         mockPolicyProvider.Setup(a => a.GetPolicy(It.IsAny<string>())).Returns(sb.ToString());
 
-        var mockPermissionProvider = new Mock<RBACPermissionProvider>(mockPolicyProvider.Object) { CallBase = true };
+        var mockPermissionProvider = new Mock<RBACPermissionEvaluatorProvider>(mockPolicyProvider.Object) { CallBase = true };
 
         var permissionProvider = mockPermissionProvider.Object;
 

@@ -6,11 +6,11 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
-using static AccessSentry.PermissionProviders.Casbin.CasbinPermissionProvider;
+using static AccessSentry.PermissionProviders.Casbin.CasbinPermissionEvaluatorProvider;
 
 namespace AccessSentry.PermissionProviders.Casbin
 {
-    public class CasbinPermissionProvider : BaseCasbinPermissionProvider<CasbinPermissionAuthorizationContext>
+    public class CasbinPermissionEvaluatorProvider : BasePermissionEvaluatorProvider<CasbinPermissionAuthorizationContext>
     {
         #region Properties
         public new CasbinPermissionAuthorizationContext AuthorizationContext

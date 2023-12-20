@@ -1,0 +1,6 @@
+p, r::group_3, data, read, allow
+
+g, r::group_4, u::doe
+g, r::group_3, r::group_2
+g, r::group_3, u::vince
+g, r::group_2, u::teng

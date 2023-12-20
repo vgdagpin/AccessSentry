@@ -9,7 +9,7 @@ namespace AccessSentry.Interfaces
 {
     public interface IAttributePolicyEvaluator
     {
-        bool IsAttributeEvaluator(IAttributePolicy attributePolicy);
+        bool IsAttributeEvaluator(IPolicyContext attributePolicy);
 
         Task<bool> EvaluateAsync();
     }

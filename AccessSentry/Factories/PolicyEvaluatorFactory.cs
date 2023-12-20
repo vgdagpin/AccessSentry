@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 
-namespace AccessSentry
+namespace AccessSentry.Factories
 {
     public class PolicyEvaluatorFactory : IPolicyEvaluatorFactory
     {
@@ -16,11 +16,11 @@ namespace AccessSentry
             this.serviceProvider = serviceProvider;
         }
 
-        public IEnumerable<IAttributePolicyEvaluator> GetPolicyEvaluators(IAttributePolicy attributePolicy)
+        public IEnumerable<IPolicyEvaluator> GetPolicyEvaluators(IPolicyContext policyContext)
         {
-            foreach (var sp in serviceProvider.GetServices<IAttributePolicyEvaluator>())
+            foreach (var sp in serviceProvider.GetServices<IPolicyEvaluator>())
             {
-                if (sp.IsAttributeEvaluator(attributePolicy))
+                if (sp.CanUseProvider(policyContext))
                 {
                     yield return sp;
                 }

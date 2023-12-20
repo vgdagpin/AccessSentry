@@ -47,5 +47,10 @@
         {
             return new Permission(resource, "Delete");
         }
+
+        public override string ToString()
+        {
+            return $"{Resource}:{Action}";
+        }
     }
 }

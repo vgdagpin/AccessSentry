@@ -36,4 +36,19 @@
     <ProjectReference Include="..\AccessSentry\AccessSentry.csproj" />
   </ItemGroup>
 
+
+	<ItemGroup>
+	  <Folder Include="SampleDataFile\" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <None Update="SampleDataFile\SampleModel.txt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="SampleDataFile\SamplePolicy.txt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

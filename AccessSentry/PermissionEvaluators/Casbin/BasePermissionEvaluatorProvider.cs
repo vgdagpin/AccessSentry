@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace AccessSentry.PermissionProviders.Casbin
 {
-    public abstract class BaseCasbinPermissionProvider<T> : IPermissionProvider where T : IAuthorizationContext
+    public abstract class BasePermissionEvaluatorProvider<T> : IPermissionEvaluator where T : IAuthorizationContext
     {
         private IModel? model;
 
@@ -54,7 +54,10 @@ namespace AccessSentry.PermissionProviders.Casbin
 
                 if (nameClaim != null)
                 {
-                    return nameClaim.Value;
+                    if (!string.IsNullOrEmpty(nameClaim.Value))
+                    {
+                        return nameClaim.Value;
+                    }
                 }
             }
 

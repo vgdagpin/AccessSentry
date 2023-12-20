@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace AccessSentry.Interfaces
 {
     public interface IPolicyEvaluatorFactory
     {
-        IEnumerable<IAttributePolicyEvaluator> GetPolicyEvaluators(IAttributePolicy attributePolicy);
+        IEnumerable<IPolicyEvaluator> GetPolicyEvaluators(IPolicyContext policyContext);
     }
 }

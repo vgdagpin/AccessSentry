@@ -1,24 +1,26 @@
 ﻿using AccessSentry.Interfaces;
 
-using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
 
-using static AccessSentry.PermissionProviders.Casbin.CasbinFuncPermissionProvider;
-
-using static AccessSentry.PermissionProviders.Casbin.RBACPermissionProvider;
+using static AccessSentry.PermissionProviders.Casbin.RBACPermissionEvaluatorProvider;
 
 namespace AccessSentry
 {
     public class AccessSentryAuthorizationService : IAccessSentryAuthorizationService
     {
-        public IPermissionProviderFactory PermissionProviderFactory { get; }
+        public IPermissionEvaluatorFactory PermissionEvaluatorFactory { get; }
+        public IPolicyEvaluatorFactory PolicyEvaluatorFactory { get; }
 
-        public AccessSentryAuthorizationService(IPermissionProviderFactory permissionProviderFactory)
+        public AccessSentryAuthorizationService
+            (
+                IPermissionEvaluatorFactory permissionEvaluatorFactory,
+                IPolicyEvaluatorFactory policyEvaluatorFactory
+            )
         {
-            PermissionProviderFactory = permissionProviderFactory;
+            PermissionEvaluatorFactory = permissionEvaluatorFactory;
+            PolicyEvaluatorFactory = policyEvaluatorFactory;
         }
 
         protected virtual Permission[] GetPermissions(params string[] permissions)
@@ -43,17 +45,141 @@ namespace AccessSentry
             return list.ToArray();
         }
 
+        public bool EvaluatePermission(IPrincipal principal, Enums.Has has, params string[] permissions)
+        {
+            return has == Enums.Has.Any 
+                ? HasAnyPermission(principal, permissions) 
+                : HasAllPermission(principal, permissions);
+        }
+
+        public Task<bool> EvaluatePermissionAsync(IPrincipal principal, Enums.Has has, params string[] permissions)
+        {
+            return has == Enums.Has.Any
+                ? HasAnyPermissionAsync(principal, permissions)
+                : HasAllPermissionAsync(principal, permissions);
+        }
+
+        public bool EvaluatePermission(IPrincipal principal, Enums.Has has, params Permission[] permissions)
+        {
+            return has == Enums.Has.Any
+                ? HasAnyPermission(principal, permissions)
+                : HasAllPermission(principal, permissions);
+        }
+
+        public Task<bool> EvaluatePermissionAsync(IPrincipal principal, Enums.Has has, params Permission[] permissions)
+        {
+            return has == Enums.Has.Any
+                ? HasAnyPermissionAsync(principal, permissions)
+                : HasAllPermissionAsync(principal, permissions);
+        }
+
+        public bool EvaluatePolicy(IPrincipal principal, Enums.Has has, params string[] policy)
+        {
+            return has == Enums.Has.Any
+                ? HasAnyPolicy(principal, policy)
+                : HasAllPolicy(principal, policy);
+        }
+
+        public Task<bool> EvaluatePolicyAsync(IPrincipal principal, Enums.Has has, params string[] policy)
+        {
+            return has == Enums.Has.Any
+                ? HasAnyPolicyAsync(principal, policy)
+                : HasAllPolicyAsync(principal, policy);
+        }
+
+        #region HasAnyPolicy
+        protected virtual bool HasAnyPolicy(IPrincipal principal, params string[] policy)
+        {
+            var policyContext = new PolicyContext();
+
+            var hasAny = false;
+
+            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(policyContext))
+            {
+                if (policyEvaluator.EvaluateContext())
+                {
+                    hasAny = true;
+                    break;
+                }
+            }
+
+            return hasAny;
+        }
+
+        protected virtual async Task<bool> HasAnyPolicyAsync(IPrincipal principal, params string[] policy)
+        {
+            var policyContext = new PolicyContext();
+
+            var hasAny = false;
+
+            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(policyContext))
+            {
+                if (await policyEvaluator.EvaluateContextAsync())
+                {
+                    hasAny = true;
+                    break;
+                }
+            }
+
+            return hasAny;
+        }
+        #endregion
+
+        #region HasAllPolicy
+        protected virtual bool HasAllPolicy(IPrincipal principal, params string[] policy)
+        {
+            var policyContext = new PolicyContext();
+
+            var hasAll = true;
+
+            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(policyContext))
+            {
+                if (!policyEvaluator.EvaluateContext())
+                {
+                    hasAll = false;
+                    break;
+                }
+            }
+
+            return hasAll;
+        }
+
+        protected virtual async Task<bool> HasAllPolicyAsync(IPrincipal principal, params string[] policy)
+        {
+            var policyContext = new PolicyContext();
+
+            var hasAll = true;
+
+            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(policyContext))
+            {
+                if (!await policyEvaluator.EvaluateContextAsync())
+                {
+                    hasAll = false;
+                    break;
+                }
+            }
+
+            return hasAll;
+        } 
+        #endregion
 
         #region HasAllPermission
-        public bool HasAllPermission(IPrincipal principal, params string[] permissions)
+        protected virtual bool HasAllPermission(IPrincipal principal, params string[] permissions) => HasAllPermission(principal, GetPermissions(permissions));
+
+        protected virtual Task<bool> HasAllPermissionAsync(IPrincipal principal, params string[] permissions) => HasAllPermissionAsync(principal, GetPermissions(permissions));
+
+        protected virtual bool HasAllPermission(IPrincipal principal, params Permission[] permissions)
         {
-            
+            if (permissions == null || permissions.Length == 0)
+            {
+                return false;
+            }
 
             var hasAll = true;
 
-            var authContext = new RBACAuthorizationContext(principal, GetPermissions(permissions));
+            var authContext = new RBACAuthorizationContext(principal, permissions);
 
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
+            foreach (var permissionProvider in PermissionEvaluatorFactory.GetPermissionProviders(authContext))
             {
                 if (!permissionProvider.EvaluateContext())
                 {
@@ -65,30 +191,7 @@ namespace AccessSentry
             return hasAll;
         }
 
-        public async Task<bool> HasAllPermissionAsync(IPrincipal principal, params string[] permissions)
-        {
-            if (permissions == null || permissions.Length == 0)
-            {
-                return false;
-            }
-
-            var hasAll = true;
-
-            var authContext = new RBACAuthorizationContext(principal, GetPermissions(permissions));
-
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
-            {
-                if (!await permissionProvider.EvaluateContextAsync())
-                {
-                    hasAll = false;
-                    break;
-                }
-            }
-
-            return hasAll;
-        }
-
-        public bool HasAllPermission(IPrincipal principal, params Permission[] permissions)
+        protected virtual async Task<bool> HasAllPermissionAsync(IPrincipal principal, params Permission[] permissions)
         {
             if (permissions == null || permissions.Length == 0)
             {
@@ -99,30 +202,7 @@ namespace AccessSentry
 
             var authContext = new RBACAuthorizationContext(principal, permissions);
 
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
-            {
-                if (!permissionProvider.EvaluateContext())
-                {
-                    hasAll = false;
-                    break;
-                }
-            }
-
-            return hasAll;
-        }
-
-        public async Task<bool> HasAllPermissionAsync(IPrincipal principal, params Permission[] permissions)
-        {
-            if (permissions == null || permissions.Length == 0)
-            {
-                return false;
-            }
-
-            var hasAll = true;
-
-            var authContext = new RBACAuthorizationContext(principal, permissions);
-
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
+            foreach (var permissionProvider in PermissionEvaluatorFactory.GetPermissionProviders(authContext))
             {
                 if (!await permissionProvider.EvaluateContextAsync())
                 {
@@ -136,20 +216,22 @@ namespace AccessSentry
         #endregion
 
         #region HasAnyPermission
-        public bool HasAnyPermission(IPrincipal principal, params string[] permissions)
-        {
-            var perms = GetPermissions(permissions);
+        protected virtual bool HasAnyPermission(IPrincipal principal, params string[] permissions) => HasAnyPermission(principal, GetPermissions(permissions));
 
-            if (perms.Length == 0)
+        protected virtual Task<bool> HasAnyPermissionAsync(IPrincipal principal, params string[] permissions) => HasAnyPermissionAsync(principal, GetPermissions(permissions));
+
+        protected virtual bool HasAnyPermission(IPrincipal principal, params Permission[] permissions)
+        {
+            if (permissions == null || permissions.Length == 0)
             {
                 return false;
             }
 
             var hasAny = false;
 
-            var authContext = new RBACAuthorizationContext(principal, perms);
+            var authContext = new RBACAuthorizationContext(principal, permissions);
 
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
+            foreach (var permissionProvider in PermissionEvaluatorFactory.GetPermissionProviders(authContext))
             {
                 if (permissionProvider.EvaluateContext())
                 {
@@ -161,30 +243,7 @@ namespace AccessSentry
             return hasAny;
         }
 
-        public async Task<bool> HasAnyPermissionAsync(IPrincipal principal, params string[] permissions)
-        {
-            if (permissions == null || permissions.Length == 0)
-            {
-                return false;
-            }
-
-            var hasAny = false;
-
-            var authContext = new RBACAuthorizationContext(principal, GetPermissions(permissions));
-
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
-            {
-                if (await permissionProvider.EvaluateContextAsync())
-                {
-                    hasAny = true;
-                    break;
-                }
-            }
-
-            return hasAny;
-        }
-
-        public bool HasAnyPermission(IPrincipal principal, params Permission[] permissions)
+        protected virtual async Task<bool> HasAnyPermissionAsync(IPrincipal principal, params Permission[] permissions)
         {
             if (permissions == null || permissions.Length == 0)
             {
@@ -195,30 +254,7 @@ namespace AccessSentry
 
             var authContext = new RBACAuthorizationContext(principal, permissions);
 
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
-            {
-                if (permissionProvider.EvaluateContext())
-                {
-                    hasAny = true;
-                    break;
-                }
-            }
-
-            return hasAny;
-        }
-
-        public async Task<bool> HasAnyPermissionAsync(IPrincipal principal, params Permission[] permissions)
-        {
-            if (permissions == null || permissions.Length == 0)
-            {
-                return false;
-            }
-
-            var hasAny = false;
-
-            var authContext = new RBACAuthorizationContext(principal, permissions);
-
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
+            foreach (var permissionProvider in PermissionEvaluatorFactory.GetPermissionProviders(authContext))
             {
                 if (await permissionProvider.EvaluateContextAsync())
                 {
@@ -228,64 +264,6 @@ namespace AccessSentry
             }
 
             return hasAny;
-        }
-        #endregion
-
-        #region EvaluatePermission
-        public bool EvaluatePermission(IPrincipal principal, Func<string, bool> permissionExpression)
-        {
-            if (permissionExpression == null)
-            {
-                return false;
-            }
-
-            var hasAll = true;
-
-            var authContext = new CasbinFuncPermissionAuthorizationContext(principal, permissionExpression);
-
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
-            {
-                if (!permissionProvider.EvaluateContext())
-                {
-                    hasAll = false;
-                    break;
-                }
-            }
-
-            return hasAll;
-        }
-
-        public async Task<bool> EvaluatePermissionAsync(IPrincipal principal, Func<string, bool> permissionExpression)
-        {
-            if (permissionExpression == null)
-            {
-                return false;
-            }
-
-            var hasAll = true;
-
-            var authContext = new CasbinFuncPermissionAuthorizationContext(principal, permissionExpression);
-
-            foreach (var permissionProvider in PermissionProviderFactory.GetPermissionProviders(authContext))
-            {
-                if (!await permissionProvider.EvaluateContextAsync())
-                {
-                    hasAll = false;
-                    break;
-                }
-            }
-
-            return hasAll;
-        }
-
-        public bool EvaluatePermission(IPrincipal principal, Func<Permission, bool> permissionExpression)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> EvaluatePermissionAsync(IPrincipal principal, Func<Permission, bool> permissionExpression)
-        {
-            throw new NotImplementedException();
         }
         #endregion
     }

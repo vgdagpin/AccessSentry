@@ -5,20 +5,20 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 
-namespace AccessSentry
+namespace AccessSentry.Factories
 {
-    public class PermissionProviderFactory : IPermissionProviderFactory
+    public class PermissionEvaluatorFactory : IPermissionEvaluatorFactory
     {
         private readonly IServiceProvider serviceProvider;
 
-        public PermissionProviderFactory(IServiceProvider serviceProvider)
+        public PermissionEvaluatorFactory(IServiceProvider serviceProvider)
         {
             this.serviceProvider = serviceProvider;
         }
 
-        public IEnumerable<IPermissionProvider> GetPermissionProviders(IAuthorizationContext authorizationContext)
+        public IEnumerable<IPermissionEvaluator> GetPermissionProviders(IAuthorizationContext authorizationContext)
         {
-            foreach (var sp in serviceProvider.GetServices<IPermissionProvider>())
+            foreach (var sp in serviceProvider.GetServices<IPermissionEvaluator>())
             {
                 if (sp.CanUseProvider(authorizationContext))
                 {

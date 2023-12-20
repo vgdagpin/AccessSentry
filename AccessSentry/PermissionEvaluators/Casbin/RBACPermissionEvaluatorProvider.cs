@@ -6,11 +6,11 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
-using static AccessSentry.PermissionProviders.Casbin.RBACPermissionProvider;
+using static AccessSentry.PermissionProviders.Casbin.RBACPermissionEvaluatorProvider;
 
 namespace AccessSentry.PermissionProviders.Casbin
 {
-    public class RBACPermissionProvider : BaseCasbinPermissionProvider<RBACAuthorizationContext>
+    public class RBACPermissionEvaluatorProvider : BasePermissionEvaluatorProvider<RBACAuthorizationContext>
     {
         private readonly IPolicyProvider policyProvider;
 
@@ -33,7 +33,7 @@ namespace AccessSentry.PermissionProviders.Casbin
         }
         #endregion
 
-        public RBACPermissionProvider(IPolicyProvider policyProvider)
+        public RBACPermissionEvaluatorProvider(IPolicyProvider policyProvider)
         {
             this.policyProvider = policyProvider;
         }

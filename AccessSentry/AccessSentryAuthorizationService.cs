@@ -263,9 +263,9 @@ namespace AccessSentry
             return result.Distinct().ToArray();
         }
 
-        public IEnumerable<UserPermission> GetUserPermissions(IPrincipal principal)
+        public IEnumerable<RBACPolicy> GetUserPermissions(IPrincipal principal)
         {
-            var result = new List<UserPermission>();
+            var result = new List<RBACPolicy>();
             var authContext = new RBACAuthorizationContext(principal);
 
             foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(authContext))

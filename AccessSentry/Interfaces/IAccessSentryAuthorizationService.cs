@@ -17,7 +17,7 @@ namespace AccessSentry.Interfaces
         Task<bool> EvaluatePolicyAsync(IPrincipal principal, Enums.Has has, params string[] policy);
 
 
-        IEnumerable<UserPermission> GetUserPermissions(IPrincipal principal);
+        IEnumerable<RBACPolicy> GetUserPermissions(IPrincipal principal);
         string[] GetUserMemberships(IPrincipal principal);
     }
 }

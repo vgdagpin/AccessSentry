@@ -17,6 +17,6 @@ namespace AccessSentry.Interfaces
         Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default);
 
 
-        IEnumerable<UserPermission> GetUserPermissions();
+        IEnumerable<RBACPolicy> GetUserPermissions();
     }
 }

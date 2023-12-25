@@ -58,21 +58,21 @@ namespace AccessSentry.PermissionProviders.Casbin
             throw new ArgumentNullException("No name found from principal");
         }
 
-        public virtual IEnumerable<UserPermission> GetUserPermissions()
+        public virtual IEnumerable<RBACPolicy> GetUserPermissions()
         {
             var subject = GetSubject(AuthorizationContext.User);
             var enforcer = policyProvider.GetEnforcer(subject);
 
             var userPermissions = enforcer.GetImplicitPermissionsForUser(subject);
 
-            UserPermission FormatPerm(IEnumerable<string> perm)
+            RBACPolicy FormatPerm(IEnumerable<string> perm)
             {
                 var arr = perm.ToArray();
 
-                return new UserPermission
+                return new RBACPolicy
                 {
-                    Source = arr[0],
-                    Resource = arr[1],
+                    Subject = arr[0],
+                    ResourceName = arr[1],
                     Action = arr[2],
                     Allow = arr[3] == "allow"
                 };

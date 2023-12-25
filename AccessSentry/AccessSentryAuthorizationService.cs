@@ -1,6 +1,7 @@
 ﻿using AccessSentry.Interfaces;
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Principal;
 using System.Threading.Tasks;
 
@@ -90,11 +91,9 @@ namespace AccessSentry
         #region HasAnyPolicy
         protected virtual bool HasAnyPolicy(IPrincipal principal, params string[] policy)
         {
-            var policyContext = new PolicyContext();
-
             var hasAny = false;
 
-            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(policyContext))
+            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(new PolicyContext(principal)))
             {
                 if (policyEvaluator.EvaluateContext())
                 {
@@ -108,11 +107,9 @@ namespace AccessSentry
 
         protected virtual async Task<bool> HasAnyPolicyAsync(IPrincipal principal, params string[] policy)
         {
-            var policyContext = new PolicyContext();
-
             var hasAny = false;
 
-            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(policyContext))
+            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(new PolicyContext(principal)))
             {
                 if (await policyEvaluator.EvaluateContextAsync())
                 {
@@ -128,11 +125,9 @@ namespace AccessSentry
         #region HasAllPolicy
         protected virtual bool HasAllPolicy(IPrincipal principal, params string[] policy)
         {
-            var policyContext = new PolicyContext();
-
             var hasAll = true;
 
-            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(policyContext))
+            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(new PolicyContext(principal)))
             {
                 if (!policyEvaluator.EvaluateContext())
                 {
@@ -146,11 +141,9 @@ namespace AccessSentry
 
         protected virtual async Task<bool> HasAllPolicyAsync(IPrincipal principal, params string[] policy)
         {
-            var policyContext = new PolicyContext();
-
             var hasAll = true;
 
-            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(policyContext))
+            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(new PolicyContext(principal)))
             {
                 if (!await policyEvaluator.EvaluateContextAsync())
                 {
@@ -177,11 +170,9 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            var authContext = new RBACAuthorizationContext(principal, permissions);
-
-            foreach (var permissionProvider in PermissionEvaluatorFactory.GetPermissionProviders(authContext))
+            foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(new RBACAuthorizationContext(principal, permissions)))
             {
-                if (!permissionProvider.EvaluateContext())
+                if (!permissionEvaluator.EvaluateContext())
                 {
                     hasAll = false;
                     break;
@@ -200,11 +191,9 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            var authContext = new RBACAuthorizationContext(principal, permissions);
-
-            foreach (var permissionProvider in PermissionEvaluatorFactory.GetPermissionProviders(authContext))
+            foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(new RBACAuthorizationContext(principal, permissions)))
             {
-                if (!await permissionProvider.EvaluateContextAsync())
+                if (!await permissionEvaluator.EvaluateContextAsync())
                 {
                     hasAll = false;
                     break;
@@ -229,11 +218,9 @@ namespace AccessSentry
 
             var hasAny = false;
 
-            var authContext = new RBACAuthorizationContext(principal, permissions);
-
-            foreach (var permissionProvider in PermissionEvaluatorFactory.GetPermissionProviders(authContext))
+            foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(new RBACAuthorizationContext(principal, permissions)))
             {
-                if (permissionProvider.EvaluateContext())
+                if (permissionEvaluator.EvaluateContext())
                 {
                     hasAny = true;
                     break;
@@ -252,11 +239,9 @@ namespace AccessSentry
 
             var hasAny = false;
 
-            var authContext = new RBACAuthorizationContext(principal, permissions);
-
-            foreach (var permissionProvider in PermissionEvaluatorFactory.GetPermissionProviders(authContext))
+            foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(new RBACAuthorizationContext(principal, permissions)))
             {
-                if (await permissionProvider.EvaluateContextAsync())
+                if (await permissionEvaluator.EvaluateContextAsync())
                 {
                     hasAny = true;
                     break;
@@ -264,6 +249,31 @@ namespace AccessSentry
             }
 
             return hasAny;
+        }
+
+        public string[] GetUserMemberships(IPrincipal principal)
+        {
+            var result = new List<string>();
+
+            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(new PolicyContext(principal)))
+            {
+                result.AddRange(policyEvaluator.GetUserMemberships());
+            }
+
+            return result.Distinct().ToArray();
+        }
+
+        public IEnumerable<UserPermission> GetUserPermissions(IPrincipal principal)
+        {
+            var result = new List<UserPermission>();
+            var authContext = new RBACAuthorizationContext(principal);
+
+            foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(authContext))
+            {
+                result.AddRange(permissionEvaluator.GetUserPermissions());
+            }
+
+            return result;
         }
         #endregion
     }

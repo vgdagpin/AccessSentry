@@ -42,8 +42,8 @@ public class RBACPermissionProviderTests
 
         var sb = new StringBuilder();
 
-        sb.AppendLine($"g, r::data2_admin, u::alice"); // #7
-        sb.AppendLine($"g, r::data2_reader, u::vince"); // #8
+        sb.AppendLine($"g, u::alice, r::data2_admin"); // #7 // alice is a member of data2_admin
+        sb.AppendLine($"g, u::vince, r::data2_reader"); // #8 // vince is a member of data2_reader
 
         sb.AppendLine($"p, r::data2_reader, data2, read, allow"); // #1
         sb.AppendLine($"p, r::data2_admin, data2, read, allow"); // #2
@@ -56,7 +56,7 @@ public class RBACPermissionProviderTests
 
         mockPolicyProvider.Setup(a => a.GetPolicy(It.IsAny<string>())).Returns(sb.ToString());
 
-        var mockPermissionProvider = new Mock<RBACPermissionProvider>(mockPolicyProvider.Object) { CallBase = true };
+        var mockPermissionProvider = new Mock<RBACPermissionEvaluatorProvider>(mockPolicyProvider.Object) { CallBase = true };
 
         var permissionProvider = mockPermissionProvider.Object;
 
@@ -79,17 +79,17 @@ public class RBACPermissionProviderTests
 
         var sb = new StringBuilder();
 
-        sb.AppendLine($"g, r::group_4, u::doe");
-        sb.AppendLine($"g, r::group_3, r::group_2"); // group_2 is a member of group_3
-        sb.AppendLine($"g, r::group_3, u::vince");
-        sb.AppendLine($"g, r::group_2, u::teng"); // so teng also has access to group_3 permissions
+        sb.AppendLine($"g, u::doe, r::group_4");
+        sb.AppendLine($"g, r::group_2, r::group_3"); // group_2 is a member of group_3
+        sb.AppendLine($"g, u::vince, r::group_3");
+        sb.AppendLine($"g, u::teng, r::group_2"); // so teng also has access to group_3 permissions
 
         sb.AppendLine($"p, r::group_3, data, read, allow");
 
 
         mockPolicyProvider.Setup(a => a.GetPolicy(It.IsAny<string>())).Returns(sb.ToString());
 
-        var mockPermissionProvider = new Mock<RBACPermissionProvider>(mockPolicyProvider.Object) { CallBase = true };
+        var mockPermissionProvider = new Mock<RBACPermissionEvaluatorProvider>(mockPolicyProvider.Object) { CallBase = true };
 
         var permissionProvider = mockPermissionProvider.Object;
 

@@ -4,6 +4,6 @@ namespace AccessSentry.Interfaces
 {
     public interface IPermissionEvaluatorFactory
     {
-        IEnumerable<IPermissionEvaluator> GetPermissionProviders(IAuthorizationContext authorizationContext);
+        IEnumerable<IPermissionEvaluator> GetPermissionEvaluators(IAuthorizationContext authorizationContext);
     }
 }

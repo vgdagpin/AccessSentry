@@ -20,7 +20,7 @@ namespace AccessSentry.Factories
         {
             foreach (var sp in serviceProvider.GetServices<IPolicyEvaluator>())
             {
-                if (sp.CanUseProvider(policyContext))
+                if (sp.CanUseEvaluator(policyContext))
                 {
                     yield return sp;
                 }

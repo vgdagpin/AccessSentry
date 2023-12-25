@@ -16,11 +16,11 @@ namespace AccessSentry.Factories
             this.serviceProvider = serviceProvider;
         }
 
-        public IEnumerable<IPermissionEvaluator> GetPermissionProviders(IAuthorizationContext authorizationContext)
+        public IEnumerable<IPermissionEvaluator> GetPermissionEvaluators(IAuthorizationContext authorizationContext)
         {
             foreach (var sp in serviceProvider.GetServices<IPermissionEvaluator>())
             {
-                if (sp.CanUseProvider(authorizationContext))
+                if (sp.CanUseEvaluator(authorizationContext))
                 {
                     sp.AuthorizationContext = authorizationContext;
 

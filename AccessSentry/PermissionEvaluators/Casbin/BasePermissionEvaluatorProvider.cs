@@ -1,12 +1,10 @@
 ﻿using AccessSentry.Interfaces;
 
 using Casbin;
-using Casbin.Model;
-using Casbin.Persist;
-using Casbin.Persist.Adapter.File;
 
 using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
@@ -17,26 +15,22 @@ namespace AccessSentry.PermissionProviders.Casbin
 {
     public abstract class BasePermissionEvaluatorProvider<T> : IPermissionEvaluator where T : IAuthorizationContext
     {
-        private IModel? model;
+        protected readonly IPolicyProvider policyProvider;
 
         public virtual IAuthorizationContext AuthorizationContext { get; set; } = null!;
 
-        /// <summary>
-        /// Get the model to use for casbin (eg. RBAC,ABAC, etc..)
-        /// <br /><br />
-        /// See https://casbin.org/docs/supported-models for more supported models
-        /// </summary>
-        public abstract CasbinModel Model { get; }
+        public BasePermissionEvaluatorProvider(IPolicyProvider policyProvider)
+        {
+            this.policyProvider = policyProvider;
+        }
 
-        public virtual bool CanUseProvider(IAuthorizationContext authorizationContext) => authorizationContext is T;
+        public virtual bool CanUseEvaluator(IAuthorizationContext authorizationContext) => authorizationContext is T;
 
         public abstract bool EvaluateContext();
 
-        public abstract string GetPolicy(string? subject = null);
-
         public abstract Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default);
 
-        protected virtual string GetSubject(IPrincipal principal)
+        public virtual string GetSubject(IPrincipal principal)
         {
             if (principal == null)
             {
@@ -64,44 +58,27 @@ namespace AccessSentry.PermissionProviders.Casbin
             throw new ArgumentNullException("No name found from principal");
         }
 
-        protected virtual IModel GetModel()
+        public virtual IEnumerable<UserPermission> GetUserPermissions()
         {
-            if (model == null)
+            var subject = GetSubject(AuthorizationContext.User);
+            var enforcer = policyProvider.GetEnforcer(subject);
+
+            var userPermissions = enforcer.GetImplicitPermissionsForUser(subject);
+
+            UserPermission FormatPerm(IEnumerable<string> perm)
             {
-                if (Model == null)
+                var arr = perm.ToArray();
+
+                return new UserPermission
                 {
-                    throw new ArgumentNullException(nameof(Model));
-                }
-
-                model = DefaultModel.CreateFromText(Model.ToString().Trim());
+                    Source = arr[0],
+                    Resource = arr[1],
+                    Action = arr[2],
+                    Allow = arr[3] == "allow"
+                };
             }
 
-            return model;
-        }
-
-        /// <summary>
-        /// Adapters to use when enforcing policy
-        /// <br /><br />
-        /// See https://casbin.org/docs/adapters for more adapter types
-        /// </summary>
-        protected virtual IReadOnlyAdapter GetFileAdapter(string subject)
-        {
-            var policy = GetPolicy(subject);
-
-            if (string.IsNullOrWhiteSpace(policy))
-            {
-                throw new ArgumentNullException(nameof(policy));
-            }
-
-            return new FileAdapter(new MemoryStream(Encoding.UTF8.GetBytes(policy)));
-        }
-
-        protected virtual IEnforcer GetEnforcer(string subject)
-        {
-            var model = GetModel();
-            var adapter = GetFileAdapter(subject);
-
-            return new Enforcer(model, adapter);
+            return userPermissions.Select(FormatPerm);
         }
     }
 

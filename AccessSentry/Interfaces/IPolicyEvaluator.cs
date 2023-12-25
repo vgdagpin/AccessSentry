@@ -1,11 +1,14 @@
-﻿using System.Threading;
+﻿using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AccessSentry.Interfaces
 {
     public interface IPolicyEvaluator
     {
-        bool CanUseProvider(IPolicyContext policyContext);
+        string[] GetUserMemberships();
+
+        bool CanUseEvaluator(IPolicyContext policyContext);
 
         bool EvaluateContext();
 

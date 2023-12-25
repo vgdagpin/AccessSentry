@@ -1,4 +1,5 @@
-﻿using System.Security.Principal;
+﻿using System.Collections.Generic;
+using System.Security.Principal;
 using System.Threading.Tasks;
 
 namespace AccessSentry.Interfaces
@@ -14,5 +15,9 @@ namespace AccessSentry.Interfaces
 
         bool EvaluatePolicy(IPrincipal principal, Enums.Has has, params string[] policy);
         Task<bool> EvaluatePolicyAsync(IPrincipal principal, Enums.Has has, params string[] policy);
+
+
+        IEnumerable<UserPermission> GetUserPermissions(IPrincipal principal);
+        string[] GetUserMemberships(IPrincipal principal);
     }
 }

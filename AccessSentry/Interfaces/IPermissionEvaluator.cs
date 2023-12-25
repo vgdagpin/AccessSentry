@@ -1,4 +1,7 @@
-﻿using System.Threading;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AccessSentry.Interfaces
@@ -7,10 +10,13 @@ namespace AccessSentry.Interfaces
     {
         IAuthorizationContext AuthorizationContext { get; set; }
 
-        bool CanUseProvider(IAuthorizationContext authorizationContext);
+        bool CanUseEvaluator(IAuthorizationContext authorizationContext);
 
         bool EvaluateContext();
 
         Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default);
+
+
+        IEnumerable<UserPermission> GetUserPermissions();
     }
 }

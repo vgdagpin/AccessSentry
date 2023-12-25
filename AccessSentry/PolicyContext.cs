@@ -1,9 +1,6 @@
 ﻿using AccessSentry.Interfaces;
 
-using System;
-using System.Collections.Generic;
 using System.Security.Principal;
-using System.Text;
 
 namespace AccessSentry
 {
@@ -11,5 +8,10 @@ namespace AccessSentry
     {
         public IPrincipal User { get; set; } = null!;
         public string Policy { get; set; } = null!;
+
+        public PolicyContext(IPrincipal user)
+        {
+            User = user;
+        }
     }
 }

@@ -12,19 +12,8 @@ namespace AccessSentry.PermissionProviders.Casbin
 {
     public class RBACPermissionEvaluatorProvider : BasePermissionEvaluatorProvider<RBACAuthorizationContext>
     {
-        private readonly IPolicyProvider policyProvider;
-
         #region Properties
         public virtual string SuperAdminRole => "r::SuperAdmin";
-
-        public override CasbinModel Model => new CasbinModel
-        {
-            RequestDefinition = "r = sub, obj, act",
-            PolicyDefinition = new[] { "p = sub, obj, act, eft" },
-            RoleDefinition = new[] { "g = _, _" },
-            PolicyEffect = "e = some(where (p.eft == allow)) && !some(where (p.eft == deny))",
-            Matchers = new[] { $"m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act" }
-        };
 
         public new RBACAuthorizationContext AuthorizationContext
         {
@@ -33,9 +22,10 @@ namespace AccessSentry.PermissionProviders.Casbin
         }
         #endregion
 
-        public RBACPermissionEvaluatorProvider(IPolicyProvider policyProvider)
+        public RBACPermissionEvaluatorProvider(IPolicyProvider policyProvider) 
+            : base(policyProvider)
         {
-            this.policyProvider = policyProvider;
+
         }
 
         protected virtual bool IsSuperAdmin()
@@ -68,7 +58,7 @@ namespace AccessSentry.PermissionProviders.Casbin
             }
 
             var subject = GetSubject(AuthorizationContext.User);
-            var enforcer = GetEnforcer(subject);
+            var enforcer = policyProvider.GetEnforcer(subject);
 
             foreach (var permission in AuthorizationContext.Permissions)
             {
@@ -99,7 +89,7 @@ namespace AccessSentry.PermissionProviders.Casbin
             }
 
             var subject = GetSubject(AuthorizationContext.User);
-            var enforcer = GetEnforcer(subject);
+            var enforcer = policyProvider.GetEnforcer(subject);
 
             foreach (var permission in AuthorizationContext.Permissions)
             {
@@ -115,12 +105,15 @@ namespace AccessSentry.PermissionProviders.Casbin
             return hasAny;
         }
 
-        public override string GetPolicy(string? subject = null) => policyProvider.GetPolicy(subject);
-
         public class RBACAuthorizationContext : IAuthorizationContext
         {
             public IPrincipal User { get; }
-            public Permission[] Permissions { get; }
+            public Permission[]? Permissions { get; }
+
+            public RBACAuthorizationContext(IPrincipal subject)
+            {
+                User = subject;
+            }
 
             public RBACAuthorizationContext(IPrincipal subject, params Permission[] permissions)
             {

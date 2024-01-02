@@ -30,11 +30,11 @@ namespace AccessSentry.PermissionProviders.Casbin
 
         public abstract Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default);
 
-        public virtual string GetSubject(IPrincipal principal)
+        public virtual string? GetSubject(IPrincipal principal)
         {
             if (principal == null)
             {
-                throw new ArgumentNullException(nameof(principal));
+                return null;
             }
 
             if (principal is ClaimsPrincipal claimsPrincipal)
@@ -55,7 +55,7 @@ namespace AccessSentry.PermissionProviders.Casbin
                 }
             }
 
-            throw new ArgumentNullException("No name found from principal");
+            return null;
         }
 
         public virtual IEnumerable<RBACPolicy> GetUserPermissions()

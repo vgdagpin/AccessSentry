@@ -66,11 +66,11 @@ namespace AccessSentry.PolicyEvaluators
             return Task.FromResult(userRoles.Contains(PolicyContext.Policy));
         }
 
-        public virtual string GetSubject(IPrincipal principal)
+        public virtual string? GetSubject(IPrincipal principal)
         {
             if (principal == null)
             {
-                throw new ArgumentNullException(nameof(principal));
+                return null;
             }
 
             if (principal is ClaimsPrincipal claimsPrincipal)
@@ -91,7 +91,7 @@ namespace AccessSentry.PolicyEvaluators
                 }
             }
 
-            throw new ArgumentNullException("No name found from principal");
+            return null;
         }
 
         public virtual string[] GetUserMemberships()

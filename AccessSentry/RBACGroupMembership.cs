@@ -6,7 +6,7 @@ namespace AccessSentry
 {
     public class RBACGroupMembership
     {
-        public string GroupName { get; set; }
-        public string MemberName { get; set; }
+        public string GroupName { get; set; } = null!;
+        public string MemberName { get; set; } = null!;
     }
 }

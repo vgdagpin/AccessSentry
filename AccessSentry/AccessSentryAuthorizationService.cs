@@ -24,80 +24,57 @@ namespace AccessSentry
             PolicyEvaluatorFactory = policyEvaluatorFactory;
         }
 
-        protected virtual Permission[] GetPermissions(params string[] permissions)
-        {
-            if (permissions == null || permissions.Length == 0)
-            {
-                return new Permission[0];
-            }
-
-            var list = new List<Permission>();
-
-            foreach (var permission in permissions)
-            {
-                var p = Permission.Parse(permission);
-
-                if (p != null)
-                {
-                    list.Add(p);
-                }
-            }
-
-            return list.ToArray();
-        }
-
-        public bool EvaluatePermission(IPrincipal principal, Enums.Has has, params string[] permissions)
+        public bool EvaluatePermission(Enums.Has has, params IAuthorizationContext[] permissions)
         {
             return has == Enums.Has.Any 
-                ? HasAnyPermission(principal, permissions) 
-                : HasAllPermission(principal, permissions);
+                ? HasAnyPermission(permissions) 
+                : HasAllPermission(permissions);
         }
 
-        public Task<bool> EvaluatePermissionAsync(IPrincipal principal, Enums.Has has, params string[] permissions)
+        public Task<bool> EvaluatePermissionAsync(Enums.Has has, params IAuthorizationContext[] permissions)
         {
             return has == Enums.Has.Any
-                ? HasAnyPermissionAsync(principal, permissions)
-                : HasAllPermissionAsync(principal, permissions);
+                ? HasAnyPermissionAsync(permissions)
+                : HasAllPermissionAsync(permissions);
         }
 
-        public bool EvaluatePermission(IPrincipal principal, Enums.Has has, params Permission[] permissions)
+        public bool EvaluatePolicy(Enums.Has has, params IPolicyContext[] policy)
         {
             return has == Enums.Has.Any
-                ? HasAnyPermission(principal, permissions)
-                : HasAllPermission(principal, permissions);
+                ? HasAnyPolicy(policy)
+                : HasAllPolicy(policy);
         }
 
-        public Task<bool> EvaluatePermissionAsync(IPrincipal principal, Enums.Has has, params Permission[] permissions)
+        public Task<bool> EvaluatePolicyAsync(Enums.Has has, params IPolicyContext[] policy)
         {
             return has == Enums.Has.Any
-                ? HasAnyPermissionAsync(principal, permissions)
-                : HasAllPermissionAsync(principal, permissions);
-        }
-
-        public bool EvaluatePolicy(IPrincipal principal, Enums.Has has, params string[] policy)
-        {
-            return has == Enums.Has.Any
-                ? HasAnyPolicy(principal, policy)
-                : HasAllPolicy(principal, policy);
-        }
-
-        public Task<bool> EvaluatePolicyAsync(IPrincipal principal, Enums.Has has, params string[] policy)
-        {
-            return has == Enums.Has.Any
-                ? HasAnyPolicyAsync(principal, policy)
-                : HasAllPolicyAsync(principal, policy);
+                ? HasAnyPolicyAsync(policy)
+                : HasAllPolicyAsync(policy);
         }
 
         #region HasAnyPolicy
-        protected virtual bool HasAnyPolicy(IPrincipal principal, params string[] policy)
+        protected virtual bool HasAnyPolicy(params IPolicyContext[] policy)
         {
             var hasAny = false;
 
-            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(new PolicyContext(principal)))
+            if (policy == null || policy.Length == 0)
             {
-                if (policyEvaluator.EvaluateContext())
+                return false;
+            }
+
+            foreach (var p in policy)
+            {
+                foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(p))
                 {
-                    hasAny = true;
+                    if (policyEvaluator.EvaluateContext())
+                    {
+                        hasAny = true;
+                        break;
+                    }
+                }
+
+                if (hasAny)
+                {
                     break;
                 }
             }
@@ -105,15 +82,28 @@ namespace AccessSentry
             return hasAny;
         }
 
-        protected virtual async Task<bool> HasAnyPolicyAsync(IPrincipal principal, params string[] policy)
+        protected virtual async Task<bool> HasAnyPolicyAsync(params IPolicyContext[] policy)
         {
             var hasAny = false;
 
-            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(new PolicyContext(principal)))
+            if (policy == null || policy.Length == 0)
             {
-                if (await policyEvaluator.EvaluateContextAsync())
+                return false;
+            }
+
+            foreach (var p in policy)
+            {
+                foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(p))
                 {
-                    hasAny = true;
+                    if (await policyEvaluator.EvaluateContextAsync())
+                    {
+                        hasAny = true;
+                        break;
+                    }
+                }
+
+                if (hasAny)
+                {
                     break;
                 }
             }
@@ -123,15 +113,28 @@ namespace AccessSentry
         #endregion
 
         #region HasAllPolicy
-        protected virtual bool HasAllPolicy(IPrincipal principal, params string[] policy)
+        protected virtual bool HasAllPolicy(params IPolicyContext[] policy)
         {
             var hasAll = true;
 
-            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(new PolicyContext(principal)))
+            if (policy == null || policy.Length == 0)
             {
-                if (!policyEvaluator.EvaluateContext())
+                return false;
+            }
+
+            foreach (var p in policy)
+            {
+                foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(p))
                 {
-                    hasAll = false;
+                    if (!policyEvaluator.EvaluateContext())
+                    {
+                        hasAll = false;
+                        break;
+                    }
+                }
+
+                if (!hasAll)
+                {
                     break;
                 }
             }
@@ -139,15 +142,28 @@ namespace AccessSentry
             return hasAll;
         }
 
-        protected virtual async Task<bool> HasAllPolicyAsync(IPrincipal principal, params string[] policy)
+        protected virtual async Task<bool> HasAllPolicyAsync(params IPolicyContext[] policy)
         {
             var hasAll = true;
 
-            foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(new PolicyContext(principal)))
+            if (policy == null || policy.Length == 0)
             {
-                if (!await policyEvaluator.EvaluateContextAsync())
+                return false;
+            }
+
+            foreach (var p in policy)
+            {
+                foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(p))
                 {
-                    hasAll = false;
+                    if (!await policyEvaluator.EvaluateContextAsync())
+                    {
+                        hasAll = false;
+                        break;
+                    }
+                }
+
+                if (!hasAll)
+                {
                     break;
                 }
             }
@@ -157,11 +173,7 @@ namespace AccessSentry
         #endregion
 
         #region HasAllPermission
-        protected virtual bool HasAllPermission(IPrincipal principal, params string[] permissions) => HasAllPermission(principal, GetPermissions(permissions));
-
-        protected virtual Task<bool> HasAllPermissionAsync(IPrincipal principal, params string[] permissions) => HasAllPermissionAsync(principal, GetPermissions(permissions));
-
-        protected virtual bool HasAllPermission(IPrincipal principal, params Permission[] permissions)
+        protected virtual bool HasAllPermission(params IAuthorizationContext[] permissions)
         {
             if (permissions == null || permissions.Length == 0)
             {
@@ -170,11 +182,19 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(new RBACAuthorizationContext(principal, permissions)))
+            foreach (var perm in permissions)
             {
-                if (!permissionEvaluator.EvaluateContext())
+                foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(perm))
                 {
-                    hasAll = false;
+                    if (!permissionEvaluator.EvaluateContext())
+                    {
+                        hasAll = false;
+                        break;
+                    }
+                }
+
+                if (!hasAll)
+                {
                     break;
                 }
             }
@@ -182,7 +202,7 @@ namespace AccessSentry
             return hasAll;
         }
 
-        protected virtual async Task<bool> HasAllPermissionAsync(IPrincipal principal, params Permission[] permissions)
+        protected virtual async Task<bool> HasAllPermissionAsync(params IAuthorizationContext[] permissions)
         {
             if (permissions == null || permissions.Length == 0)
             {
@@ -191,11 +211,19 @@ namespace AccessSentry
 
             var hasAll = true;
 
-            foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(new RBACAuthorizationContext(principal, permissions)))
+            foreach (var perm in permissions)
             {
-                if (!await permissionEvaluator.EvaluateContextAsync())
+                foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(perm))
                 {
-                    hasAll = false;
+                    if (!await permissionEvaluator.EvaluateContextAsync())
+                    {
+                        hasAll = false;
+                        break;
+                    }
+                }
+
+                if (!hasAll)
+                {
                     break;
                 }
             }
@@ -205,11 +233,7 @@ namespace AccessSentry
         #endregion
 
         #region HasAnyPermission
-        protected virtual bool HasAnyPermission(IPrincipal principal, params string[] permissions) => HasAnyPermission(principal, GetPermissions(permissions));
-
-        protected virtual Task<bool> HasAnyPermissionAsync(IPrincipal principal, params string[] permissions) => HasAnyPermissionAsync(principal, GetPermissions(permissions));
-
-        protected virtual bool HasAnyPermission(IPrincipal principal, params Permission[] permissions)
+        protected virtual bool HasAnyPermission(params IAuthorizationContext[] permissions)
         {
             if (permissions == null || permissions.Length == 0)
             {
@@ -218,11 +242,19 @@ namespace AccessSentry
 
             var hasAny = false;
 
-            foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(new RBACAuthorizationContext(principal, permissions)))
+            foreach (var perm in permissions)
             {
-                if (permissionEvaluator.EvaluateContext())
+                foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(perm))
                 {
-                    hasAny = true;
+                    if (permissionEvaluator.EvaluateContext())
+                    {
+                        hasAny = true;
+                        break;
+                    }
+                }
+
+                if (hasAny)
+                {
                     break;
                 }
             }
@@ -230,7 +262,7 @@ namespace AccessSentry
             return hasAny;
         }
 
-        protected virtual async Task<bool> HasAnyPermissionAsync(IPrincipal principal, params Permission[] permissions)
+        protected virtual async Task<bool> HasAnyPermissionAsync(params IAuthorizationContext[] permissions)
         {
             if (permissions == null || permissions.Length == 0)
             {
@@ -239,11 +271,19 @@ namespace AccessSentry
 
             var hasAny = false;
 
-            foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(new RBACAuthorizationContext(principal, permissions)))
+            foreach (var perm in permissions)
             {
-                if (await permissionEvaluator.EvaluateContextAsync())
+                foreach (var permissionEvaluator in PermissionEvaluatorFactory.GetPermissionEvaluators(perm))
                 {
-                    hasAny = true;
+                    if (await permissionEvaluator.EvaluateContextAsync())
+                    {
+                        hasAny = true;
+                        break;
+                    }
+                }
+
+                if (hasAny)
+                {
                     break;
                 }
             }

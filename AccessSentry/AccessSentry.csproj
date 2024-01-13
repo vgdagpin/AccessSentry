@@ -6,7 +6,7 @@
 		<Authors>Vincent Dagpin, Marcelius Dagpin</Authors>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<Copyright>Copyright (c) 2023</Copyright>
-		<Version>1.0.1.6</Version>
+		<Version>1.0.1.7</Version>
 		<PackageReleaseNotes></PackageReleaseNotes>
 		<RepositoryUrl>https://github.com/vgdagpin/AccessSentry</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/vgdagpin/AccessSentry</PackageProjectUrl>

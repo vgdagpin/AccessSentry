@@ -6,15 +6,12 @@ namespace AccessSentry.Interfaces
 {
     public interface IAccessSentryAuthorizationService
     {
-        bool EvaluatePermission(IPrincipal principal, Enums.Has has, params string[] permissions);
-        Task<bool> EvaluatePermissionAsync(IPrincipal principal, Enums.Has has, params string[] permissions);
-
-        bool EvaluatePermission(IPrincipal principal, Enums.Has has, params Permission[] permissions);
-        Task<bool> EvaluatePermissionAsync(IPrincipal principal, Enums.Has has, params Permission[] permissions);
+        bool EvaluatePermission(Enums.Has has, params IAuthorizationContext[] permissions);
+        Task<bool> EvaluatePermissionAsync(Enums.Has has, params IAuthorizationContext[] permissions);
         
 
-        bool EvaluatePolicy(IPrincipal principal, Enums.Has has, params string[] policy);
-        Task<bool> EvaluatePolicyAsync(IPrincipal principal, Enums.Has has, params string[] policy);
+        bool EvaluatePolicy(Enums.Has has, params IPolicyContext[] policy);
+        Task<bool> EvaluatePolicyAsync(Enums.Has has, params IPolicyContext[] policy);
 
 
         IEnumerable<RBACPolicy> GetUserPermissions(IPrincipal principal);

@@ -32,8 +32,25 @@ namespace AccessSentry
         };
 
 
-        public static string FormatGroupSubject(string groupName) => $"g::{groupName.ToUpper()}";
-        public static string FormatUserSubject(string user) => $"u::{user.ToUpper()}";
+        public static string FormatGroupSubject(string groupName)
+        {
+            if (groupName.StartsWith("g::"))
+            {
+                return groupName;
+            }
+
+            return $"g::{groupName.ToUpper()}";
+        }
+
+        public static string FormatUserSubject(string user)
+        {
+            if (user.StartsWith("u::"))
+            {
+                return user;
+            }
+
+            return $"u::{user.ToUpper()}";
+        }
 
         public virtual string GetPolicy(string? subject = null)
         {

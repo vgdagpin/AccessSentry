@@ -13,7 +13,7 @@ namespace AccessSentry.PermissionProviders.Casbin
     public class RBACPermissionEvaluatorProvider : BasePermissionEvaluatorProvider<RBACAuthorizationContext>
     {
         #region Properties
-        public virtual string SuperAdminRole => "r::SuperAdmin";
+        public virtual string SuperAdminRole => "SuperAdmin";
 
         public new RBACAuthorizationContext AuthorizationContext
         {
@@ -28,20 +28,9 @@ namespace AccessSentry.PermissionProviders.Casbin
 
         }
 
-        protected virtual bool IsSuperAdmin()
-        {
-            if (!string.IsNullOrWhiteSpace(SuperAdminRole) && GetSubject(AuthorizationContext.User) == SuperAdminRole)
-            {
-                return true;
-            }
+        protected virtual bool IsSuperAdmin(IPrincipal principal) => principal.IsInRole(SuperAdminRole);
 
-            return false;
-        }
-
-        protected virtual string TranslateResource(Permission permission)
-        {
-            return permission.Resource;
-        }
+        protected virtual string TranslateResource(Permission permission) => permission.Resource;
 
         public override bool EvaluateContext()
         {
@@ -52,7 +41,7 @@ namespace AccessSentry.PermissionProviders.Casbin
 
             var hasAny = false;
 
-            if (IsSuperAdmin())
+            if (IsSuperAdmin(AuthorizationContext.User))
             {
                 return true;
             }
@@ -83,7 +72,7 @@ namespace AccessSentry.PermissionProviders.Casbin
 
             var hasAny = false;
 
-            if (IsSuperAdmin())
+            if (IsSuperAdmin(AuthorizationContext.User))
             {
                 return true;
             }

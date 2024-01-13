@@ -32,7 +32,7 @@ public class RBACPermissionProviderTests
     [InlineData("007", "r::data2_reader", "data2", "write", false)]
     [InlineData("008", "u::vince", "data2", "write", false)]
     [InlineData("009", "u::vince", "data2", "read", true)]
-    [InlineData("010", "r::SuperAdmin", "data2", "read", true)]
+    [InlineData("010", "SuperAdmin", "data2", "read", true)]
     public void TestHandler(string _, string sub, string obj, string act, bool hasPermission)
     {
         var mockPolicyProvider = new Mock<RBACPolicyProvider>() { CallBase = true };
@@ -57,7 +57,14 @@ public class RBACPermissionProviderTests
 
         var permissionProvider = mockPermissionProvider.Object;
 
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, sub) }));
+        var claimsId = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, sub) });
+
+        if (sub == "SuperAdmin")
+        {
+            claimsId.AddClaim(new Claim(ClaimTypes.Role, "SuperAdmin"));
+        }
+
+        var principal = new ClaimsPrincipal(claimsId);
 
         permissionProvider.AuthorizationContext = new RBACAuthorizationContext(principal, Permission.Other(obj, act));
 

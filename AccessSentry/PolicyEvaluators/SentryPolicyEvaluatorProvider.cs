@@ -16,6 +16,7 @@ namespace AccessSentry.PolicyEvaluators
     {
         protected IPolicyContext? PolicyContext;
         private readonly IPolicyProvider p_PolicyProvider;
+        public virtual string SuperAdminRole => "SuperAdmin";
 
         public SentryPolicyEvaluatorProvider(IPolicyProvider policyProvider)
         {
@@ -34,6 +35,8 @@ namespace AccessSentry.PolicyEvaluators
             return false;
         }
 
+        protected virtual bool IsSuperAdmin(IPrincipal principal) => principal.IsInRole(SuperAdminRole);
+
         public virtual bool EvaluateContext()
         {
             if (PolicyContext == null
@@ -41,6 +44,11 @@ namespace AccessSentry.PolicyEvaluators
                 || string.IsNullOrWhiteSpace(PolicyContext.Policy))
             {
                 return false;
+            }
+
+            if (IsSuperAdmin(PolicyContext.User))
+            {
+                return true;
             }
 
             var subject = GetSubject(PolicyContext.User);
@@ -57,6 +65,11 @@ namespace AccessSentry.PolicyEvaluators
                 || string.IsNullOrWhiteSpace(PolicyContext.Policy))
             {
                 return Task.FromResult(false);
+            }
+
+            if (IsSuperAdmin(PolicyContext.User))
+            {
+                return Task.FromResult(true);
             }
 
             var subject = GetSubject(PolicyContext.User);

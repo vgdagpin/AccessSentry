@@ -1,32 +1,38 @@
-name: Build and Publish NuGet Package
+name: 🐙 Create NuGet Package
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3.5.3
-      
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      - name: 🛠️ Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Build
-      run: dotnet build -c Release
+      - name: ⚙️ Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Test
-      run: dotnet test
+      - name: 📦 Build & Pack NuGet Package
+        run: |
+          dotnet restore
+          dotnet build --configuration Release
+          dotnet pack --configuration Release --output ./nupkg
 
-    - name: Pack
-      run: dotnet pack -c Release --no-build --include-symbols --include-source
+      - name: 🔑 Authenticate with GitHub Packages
+        run: |
+          dotnet nuget add source --username ${{ github.actor }} \
+            --password ${{ secrets.PUBLISHPACKAGE }} \
+            --store-password-in-clear-text \
+            --name github \
+            "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
 
-    - name: Publish Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: NuGet Package
-        path: '*.nupkg'
+      - name: 🚀 Push to GitHub Packages
+        run: dotnet nuget push "./nupkg/*.nupkg" --source "github"

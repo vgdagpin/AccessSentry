@@ -126,9 +126,11 @@ namespace AccessSentry
             {
                 foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(p))
                 {
-                    if (!policyEvaluator.EvaluateContext())
+                    hasAll &= policyEvaluator.EvaluateContext();
+
+                    // if validation failed already, no need to continue
+                    if (!hasAll)
                     {
-                        hasAll = false;
                         break;
                     }
                 }
@@ -155,9 +157,11 @@ namespace AccessSentry
             {
                 foreach (var policyEvaluator in PolicyEvaluatorFactory.GetPolicyEvaluators(p))
                 {
-                    if (!await policyEvaluator.EvaluateContextAsync())
+                    hasAll &= await policyEvaluator.EvaluateContextAsync();
+
+                    // if validation failed already, no need to continue
+                    if (!hasAll)
                     {
-                        hasAll = false;
                         break;
                     }
                 }

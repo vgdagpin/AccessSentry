@@ -1,20 +1,18 @@
-name: Build and Publish NuGet Package
+﻿name: Build and Publish NuGet Package
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3.5.3
+    - name: 🛠️ Checkout Code
+      uses: actions/checkout@v4
       
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+    - name: ⚙️ Setup .NET SDK
+      uses: actions/setup-dotnet@v3
 
     - name: Build
       run: dotnet build -c Release
@@ -25,8 +23,20 @@ jobs:
     - name: Pack
       run: dotnet pack -c Release --no-build --include-symbols --include-source
 
-    - name: Publish Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: NuGet Package
-        path: '*.nupkg'
+    - name: 📦 AccessSentry - Build & Pack NuGet Package
+      run: |
+        CSPROJ_PATH="Src/AccessSentry/AccessSentry.csproj"
+        VERSION=$(grep '<Version>' "$CSPROJ_PATH" | sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p')
+        echo "Package version: $VERSION"
+        dotnet restore "$CSPROJ_PATH"
+        dotnet pack "$CSPROJ_PATH" \
+          --configuration Debug \
+          -p:PackageVersion=$VERSION \
+          --include-symbols \
+          --output ./pkg
+
+    - name: 🚀 Push to GitHub Packages
+      run: |
+        dotnet nuget push "./pkg/*.nupkg" "./pkg/*.snupkg" \
+          --source "nuget.pkg.github.com" \
+          --skip-duplicate

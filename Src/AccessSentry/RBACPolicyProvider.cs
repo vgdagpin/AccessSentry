@@ -15,6 +15,8 @@ namespace AccessSentry
 {
     public class RBACPolicyProvider : IPolicyProvider
     {
+        
+
         private IModel? model;
 
         /// <summary>
@@ -30,27 +32,6 @@ namespace AccessSentry
             PolicyEffect = "e = some(where (p.eft == allow)) && !some(where (p.eft == deny))",
             Matchers = new[] { $"m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act" }
         };
-
-
-        public static string FormatGroupSubject(string groupName)
-        {
-            if (groupName.StartsWith("g::"))
-            {
-                return groupName;
-            }
-
-            return $"g::{groupName.ToUpper()}";
-        }
-
-        public static string FormatUserSubject(string user)
-        {
-            if (user.StartsWith("u::"))
-            {
-                return user;
-            }
-
-            return $"u::{user.ToUpper()}";
-        }
 
         public virtual string GetPolicy(string? subject = null)
         {

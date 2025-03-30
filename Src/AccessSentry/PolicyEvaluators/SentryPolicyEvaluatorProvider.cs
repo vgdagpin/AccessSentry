@@ -37,6 +37,11 @@ namespace AccessSentry.PolicyEvaluators
 
         protected virtual bool IsSuperAdmin(IPrincipal principal) => principal.IsInRole(SuperAdminRole);
 
+        protected virtual string ResolveRole(IPolicyContext policyContext)
+        {
+            return policyContext.Policy;
+        }
+
         public virtual bool EvaluateContext()
         {
             if (PolicyContext == null
@@ -54,8 +59,9 @@ namespace AccessSentry.PolicyEvaluators
             var subject = GetSubject(PolicyContext.User);
             var enforcer = p_PolicyProvider.GetEnforcer(subject);
             var userRoles = enforcer.GetImplicitRolesForUser(subject);
+            var role = ResolveRole(PolicyContext);
 
-            return userRoles.Contains(PolicyContext.Policy);
+            return userRoles.Contains(role, StringComparer.OrdinalIgnoreCase);
         }
 
         public virtual Task<bool> EvaluateContextAsync(CancellationToken cancellationToken = default)
@@ -75,8 +81,9 @@ namespace AccessSentry.PolicyEvaluators
             var subject = GetSubject(PolicyContext.User);
             var enforcer = p_PolicyProvider.GetEnforcer(subject);
             var userRoles = enforcer.GetImplicitRolesForUser(subject);
+            var role = ResolveRole(PolicyContext);
 
-            return Task.FromResult(userRoles.Contains(PolicyContext.Policy));
+            return Task.FromResult(userRoles.Contains(role, StringComparer.OrdinalIgnoreCase));
         }
 
         public virtual string? GetSubject(IPrincipal principal)

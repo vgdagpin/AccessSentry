@@ -30,5 +30,5 @@ jobs:
     - name: 🚀 Push to GitHub Packages
       run: |
         dotnet nuget push "./pkg/*.nupkg" "./pkg/*.snupkg" \
-          --source "nuget.pkg.github.com" \
+          --source "https://nuget.pkg.github.com/vgdagpin/index.json" \
           --skip-duplicate  

@@ -14,15 +14,6 @@ jobs:
     - name: ⚙️ Setup .NET SDK
       uses: actions/setup-dotnet@v3
 
-    - name: Build
-      run: dotnet build -c Release
-
-    - name: Test
-      run: dotnet test
-
-    - name: Pack
-      run: dotnet pack -c Release --no-build --include-symbols --include-source
-
     - name: 📦 AccessSentry - Build & Pack NuGet Package
       run: |
         CSPROJ_PATH="Src/AccessSentry/AccessSentry.csproj"

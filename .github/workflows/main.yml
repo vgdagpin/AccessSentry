@@ -16,10 +16,11 @@ jobs:
 
     - name: 📦 AccessSentry - Build & Pack NuGet Package
       run: |
-        CSPROJ_PATH="/Src/AccessSentry/AccessSentry.csproj"
+        CSPROJ_PATH="Src/AccessSentry/AccessSentry.csproj"
         VERSION=$(grep '<Version>' "$CSPROJ_PATH" | sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p')
         echo "Package version: $VERSION"
         dotnet restore "$CSPROJ_PATH"
+        dotnet build "$CSPROJ_PATH" --configuration Debug
         dotnet pack "$CSPROJ_PATH" \
           --configuration Debug \
           -p:PackageVersion=$VERSION \

@@ -31,4 +31,5 @@ jobs:
       run: |
         dotnet nuget push "./pkg/*.nupkg" "./pkg/*.snupkg" \
           --source "https://nuget.pkg.github.com/vgdagpin/index.json" \
+          --api-key "${{ secrets.PUBLISHPACKAGE }}" \
           --skip-duplicate  
